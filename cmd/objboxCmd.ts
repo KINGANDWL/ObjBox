@@ -23,7 +23,7 @@ if (args.length <= 2) {
     try {
         let operation = args[0].toLowerCase()
         let name = args[1]
-        let path = args[2].toLowerCase()
+        let path = args[2]
 
         let templateFile = {
             "anno-class": "/classAnnotationTemplate.ts.txt",

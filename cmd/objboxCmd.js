@@ -16,7 +16,7 @@ else {
     try {
         var operation = args[0].toLowerCase();
         var name_1 = args[1];
-        var path_1 = args[2].toLowerCase();
+        var path_1 = args[2];
         var templateFile = {
             "anno-class": "/classAnnotationTemplate.ts.txt",
             "anno-property": "/propertyAnnotationTemplate.ts.txt",
