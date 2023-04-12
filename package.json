@@ -1,0 +1,31 @@
+{
+	"name": "objbox",
+	"version": "1.2.5",
+	"description": "基于typescript装饰器的轻量级IOC容器",
+	"main": "index.js",
+	"directories": {
+		"example": "example",
+		"test": "test"
+	},
+	"scripts": {
+		"compile": "tsc -p ./tsconfig.json"
+	},
+	"bin": "./cmd/objboxCmd.js",
+	"keywords": [
+		"ioc",
+		"dependency inject",
+		"annotation",
+		"component",
+		"IOC容器",
+		"依赖注入",
+		"注解式编程",
+		"组件"
+	],
+	"author": "KINGAndWL",
+	"license": "ISC",
+	"dependencies": {
+		"@types/fs-extra": "^11.0.1",
+		"@types/node": "^18.11.18",
+		"fs-extra": "^11.1.1"
+	}
+}

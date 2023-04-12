@@ -1,0 +1,21 @@
+import { ComponentCreatedType, getFunName, registerClass } from "objbox"
+
+//用于外部获取注解参数【非必要】
+export interface %AnnotationName%Arg{
+    yourArg1: any
+    yourArg2: any
+}
+/**
+ * 默认class注解模板
+ * @param yourArg1 
+ * @param yourArg2 
+ */
+export function %AnnotationName% (yourArg1: any, yourArg2:any): ClassDecorator {
+    //获取当前函数名称，等效于let _annotationName = "%AnnotationName%"
+    let _annotationName = getFunName(2)
+    return function (target: Function): any {
+        // 如果你希望这个注解能够直接成为组件注解，就手动给当前注解手动添加注册
+        // registerClass("Component", { name: target.name, scope: ComponentCreatedType.Singleton }, target)
+        registerClass<%AnnotationName%Arg>(_annotationName, { yourArg1, yourArg2 }, target)
+    }
+}

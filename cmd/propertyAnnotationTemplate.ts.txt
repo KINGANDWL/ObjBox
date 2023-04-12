@@ -1,0 +1,20 @@
+import { getFunName, registerProperty } from "objbox"
+
+//用于外部获取注解参数【非必要】
+export interface %AnnotationName%Arg{
+    yourArg1: any
+    yourArg2: any
+}
+/**
+ * 默认属性注解模板
+ * @param yourArg1 
+ * @param yourArg2 
+ */
+export function %AnnotationName% (yourArg1: any, yourArg2:any): PropertyDecorator {
+    //获取当前函数名称，等效于let _annotationName = "%AnnotationName%"
+    let _annotationName = getFunName(2)
+    //@ts-ignore
+    return function (target: any, key: string) {
+        registerProperty<%AnnotationName%Arg>(_annotationName, { yourArg1, yourArg2 }, target, key)
+    }
+}

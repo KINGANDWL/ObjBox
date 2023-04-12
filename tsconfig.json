@@ -1,0 +1,18 @@
+{
+	"include": [
+		"./libs/**/*",
+		"./src/**/*",
+		"./ObjBoxHelper/**/*",
+		"./demo/**/*",
+		"./index.ts"
+	],
+	"compilerOptions": {
+		"experimentalDecorators": true,
+		"module": "commonjs",
+		"target": "ES6",
+		"paths": {},
+		"types": [
+		  "node"
+		]
+	}
+}
