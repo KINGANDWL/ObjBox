@@ -51,11 +51,11 @@ class ObjBoxHelper {
      */
     static isObjectTypeofComponent(obj) {
         if (obj != null) {
-            let prot = obj.prototype;
+            let comInterface = obj;
             // 符合注解体要求
-            if (prot != null && prot._annotations_ != null && prot._annotations_.clazz != null) {
-                if (prot._annotations_.clazz.annotationNameMap != null) {
-                    return Object.keys(prot._annotations_.clazz.annotationNameMap).length > 0;
+            if (comInterface._annotations_ != null && comInterface._annotations_.clazz != null) {
+                if (comInterface._annotations_.clazz.annotationNameMap != null) {
+                    return Object.keys(comInterface._annotations_.clazz.annotationNameMap).length > 0;
                 }
             }
         }
