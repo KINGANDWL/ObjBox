@@ -128,8 +128,10 @@ export class ObjBox implements ObjBoxInterface {
                     } else {
                         let files = fs_extra.readdirSync(scannedDir.dirPath)
                         for (let eacnfileName of files) {
-                            let childFiles = ObjBox.listAllFiles([new ScanDir(scannedDir.dirPath + "/" + eacnfileName, scannedDir.excludeRegExp)])
-                            result = result.concat(childFiles);
+                            if(!scannedDir.isExclude(eacnfileName)){
+                                let childFiles = ObjBox.listAllFiles([new ScanDir(scannedDir.dirPath + "/" + eacnfileName, scannedDir.excludeRegExp)])
+                                result = result.concat(childFiles);
+                            }
                         }
                     }
                 }
