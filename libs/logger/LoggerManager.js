@@ -26,22 +26,22 @@ class FileLogger extends Logger_1.TypeLogger {
     log(level, msg) {
         let date = new Date();
         if (level >= this.level) {
-            let consoleMsg = this.loggerOutput.format(this.header, TimeUtils_1.StringUtils.formatDate(date, this.formate), level, msg);
+            let consoleMsg = this.loggerOutput.format(this.header, TimeUtils_1.TimeUtils.formatDate(date, this.formate), level, msg);
             this.loggerOutput.print(consoleMsg);
         }
         if (level >= this.fileLevel) {
-            let fileMsg = this.fileOutput.format(this.header, TimeUtils_1.StringUtils.formatDate(date, this.formate), level, msg);
+            let fileMsg = this.fileOutput.format(this.header, TimeUtils_1.TimeUtils.formatDate(date, this.formate), level, msg);
             this.fileOutput.print(fileMsg);
         }
     }
     logArgs(level, ...args) {
         let date = new Date();
         if (level >= this.level) {
-            let timeStamp = this.loggerOutput.format(this.header, TimeUtils_1.StringUtils.formatDate(date, this.formate), level, "");
+            let timeStamp = this.loggerOutput.format(this.header, TimeUtils_1.TimeUtils.formatDate(date, this.formate), level, "");
             this.loggerOutput.printArgs(timeStamp, ...args);
         }
         if (level >= this.fileLevel) {
-            let timeStamp = this.fileOutput.format(this.header, TimeUtils_1.StringUtils.formatDate(date, this.formate), level, "");
+            let timeStamp = this.fileOutput.format(this.header, TimeUtils_1.TimeUtils.formatDate(date, this.formate), level, "");
             this.fileOutput.printArgs(timeStamp, ...args);
         }
     }
@@ -101,7 +101,7 @@ class LoggerManager {
         if (this.option.outPutDir == null || this.option.fileTemplate == null) {
             return null;
         }
-        return this.option.outPutDir + TimeUtils_1.StringUtils.formatDate(new Date(), this.option.fileTemplate);
+        return this.option.outPutDir + TimeUtils_1.TimeUtils.formatDate(new Date(), this.option.fileTemplate);
     }
     /**
      * 获取logger

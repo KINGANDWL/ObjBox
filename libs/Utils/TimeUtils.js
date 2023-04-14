@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.StringUtils = exports.TimeFlag = void 0;
+exports.TimeUtils = exports.TimeFlag = void 0;
 var TimeFlag;
 (function (TimeFlag) {
     TimeFlag["Year"] = "$yy";
@@ -12,7 +12,7 @@ var TimeFlag;
     TimeFlag["Millisecond"] = "$ms";
 })(TimeFlag = exports.TimeFlag || (exports.TimeFlag = {}));
 // 时间格式化
-class StringUtils {
+class TimeUtils {
     static formatDate(data, format) {
         let year = data.getFullYear() + "";
         let month = ((data.getMonth() + 1) + "").padStart(2, "0");
@@ -31,6 +31,24 @@ class StringUtils {
             .replace(/\$ms/g, milliseconds);
         return format;
     }
+    static getTimeObject(data) {
+        let year = data.getFullYear() + "";
+        let month = ((data.getMonth() + 1) + "").padStart(2, "0");
+        let day = (data.getDate() + "").padStart(2, "0");
+        let hour = (data.getHours() + "").padStart(2, "0");
+        let minute = (data.getMinutes() + "").padStart(2, "0");
+        let seconds = (data.getSeconds() + "").padStart(2, "0");
+        let milliseconds = (data.getMilliseconds() + "").padStart(3, "0");
+        return {
+            year: year,
+            month: month,
+            day: day,
+            hour: hour,
+            minute: minute,
+            seconds: seconds,
+            milliseconds: milliseconds,
+        };
+    }
 }
-exports.StringUtils = StringUtils;
+exports.TimeUtils = TimeUtils;
 // console.log(StringUtils.formatDate(new Date(),`$yy-$mm-$dd $hh:$mm:$ss:$ms`))

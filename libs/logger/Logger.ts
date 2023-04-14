@@ -1,4 +1,4 @@
-import { StringUtils } from '../Utils/TimeUtils';
+import { TimeUtils } from '../Utils/TimeUtils';
 export type Constructor<T> = new (...args: any[]) => T;
 
 
@@ -104,7 +104,7 @@ export class TypeLogger implements Logger {
 
     log(level: Level, msg: string) {
         if (level >= this.level) {
-            msg = this.loggerOutput.format(this.header, StringUtils.formatDate(new Date(), this.formate), this.level, msg)
+            msg = this.loggerOutput.format(this.header, TimeUtils.formatDate(new Date(), this.formate), this.level, msg)
             this.loggerOutput.print(msg)
         }
     }
@@ -130,7 +130,7 @@ export class TypeLogger implements Logger {
 
     logArgs(level: Level, ...args: any){
         if (level >= this.level) {
-            let msg = this.loggerOutput.format(this.header, StringUtils.formatDate(new Date(), this.formate), this.level, "")
+            let msg = this.loggerOutput.format(this.header, TimeUtils.formatDate(new Date(), this.formate), this.level, "")
             this.loggerOutput.printArgs(msg,...args)
         }
     }

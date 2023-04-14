@@ -1,5 +1,5 @@
 import { LoggerOutput, Constructor, Logger, Level, TypeLogger, DefaultOutput } from './Logger';
-import { StringUtils } from '../Utils/TimeUtils';
+import { TimeUtils } from '../Utils/TimeUtils';
 import * as fs_extra from 'fs-extra';
 
 /**
@@ -19,11 +19,11 @@ class FileLogger extends TypeLogger {
     log(level: Level, msg: string) {
         let date = new Date()
         if (level >= this.level) {
-            let consoleMsg = this.loggerOutput.format(this.header, StringUtils.formatDate(date, this.formate), level, msg);
+            let consoleMsg = this.loggerOutput.format(this.header, TimeUtils.formatDate(date, this.formate), level, msg);
             this.loggerOutput.print(consoleMsg)
         }
         if (level >= this.fileLevel) {
-            let fileMsg = this.fileOutput.format(this.header, StringUtils.formatDate(date, this.formate), level, msg);
+            let fileMsg = this.fileOutput.format(this.header, TimeUtils.formatDate(date, this.formate), level, msg);
             this.fileOutput.print(fileMsg)
         }
     }
@@ -31,11 +31,11 @@ class FileLogger extends TypeLogger {
     logArgs(level: Level, ...args: any): void {
         let date = new Date()
         if (level >= this.level) {
-            let timeStamp = this.loggerOutput.format(this.header, StringUtils.formatDate(date, this.formate), level, "");
+            let timeStamp = this.loggerOutput.format(this.header, TimeUtils.formatDate(date, this.formate), level, "");
             this.loggerOutput.printArgs(timeStamp, ...args)
         }
         if (level >= this.fileLevel) {
-            let timeStamp = this.fileOutput.format(this.header, StringUtils.formatDate(date, this.formate), level, "");
+            let timeStamp = this.fileOutput.format(this.header, TimeUtils.formatDate(date, this.formate), level, "");
             this.fileOutput.printArgs(timeStamp, ...args)
         }
     }
@@ -115,7 +115,7 @@ export class LoggerManager {
         if (this.option.outPutDir == null || this.option.fileTemplate == null) {
             return null;
         }
-        return this.option.outPutDir + StringUtils.formatDate(new Date(), this.option.fileTemplate);
+        return this.option.outPutDir + TimeUtils.formatDate(new Date(), this.option.fileTemplate);
     }
 
     /**

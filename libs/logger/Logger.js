@@ -95,7 +95,7 @@ class TypeLogger {
     }
     log(level, msg) {
         if (level >= this.level) {
-            msg = this.loggerOutput.format(this.header, TimeUtils_1.StringUtils.formatDate(new Date(), this.formate), this.level, msg);
+            msg = this.loggerOutput.format(this.header, TimeUtils_1.TimeUtils.formatDate(new Date(), this.formate), this.level, msg);
             this.loggerOutput.print(msg);
         }
     }
@@ -119,7 +119,7 @@ class TypeLogger {
     }
     logArgs(level, ...args) {
         if (level >= this.level) {
-            let msg = this.loggerOutput.format(this.header, TimeUtils_1.StringUtils.formatDate(new Date(), this.formate), this.level, "");
+            let msg = this.loggerOutput.format(this.header, TimeUtils_1.TimeUtils.formatDate(new Date(), this.formate), this.level, "");
             this.loggerOutput.printArgs(msg, ...args);
         }
     }
