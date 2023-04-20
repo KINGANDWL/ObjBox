@@ -246,8 +246,8 @@ class ObjBoxHelper {
      * 创建新objbox容器
      * @param loggerConfig
      */
-    static newObjBox(loggerConfig) {
-        return new ObjBox_1.ObjBox(loggerConfig);
+    static newObjBox(loggerConfig, fs_extra = null) {
+        return new ObjBox_1.ObjBox(loggerConfig, fs_extra);
     }
 }
 exports.ObjBoxHelper = ObjBoxHelper;

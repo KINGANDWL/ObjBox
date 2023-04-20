@@ -1,5 +1,5 @@
-import { AutowireMethod, AutowireProperty, Bean, BeanComponent, Component, ComponentCreatedType,TemplateHandler } from '../';
-import { ComponentScan } from './ComponentScanDemo/ComponentScan.annotation';
+import { AutowireMethod, AutowireProperty, Bean, BeanComponent, Component, ComponentCreatedType,TemplateHandler } from '../..';
+import { ComponentScan } from '../ComponentScanDemo/ComponentScan.annotation';
 
 
 // @Component()

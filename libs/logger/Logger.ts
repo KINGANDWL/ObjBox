@@ -1,92 +1,40 @@
 import { TimeUtils } from '../Utils/TimeUtils';
+import { Level } from './Level';
+import { DefaultOutput, LoggerOutput } from './LoggerOutput';
+
+
 export type Constructor<T> = new (...args: any[]) => T;
 
 
-export enum Level {
-    ALL, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF
+export interface Logger {
+    log: (level: Level, msg: string) => void
+    trace: (msg: string) => void
+    debug: (msg: string) => void
+    info: (msg: string) => void
+    warn: (msg: string) => void
+    error: (msg: string) => void
+    fatal: (msg: string) => void
+
+    logArgs: (level: Level, ...args: any) => void
+    traceArgs: (...args: any) => void
+    debugArgs: (...args: any) => void
+    infoArgs: (...args: any) => void
+    warnArgs: (...args: any) => void
+    errorArgs: (...args: any) => void
+    fatalArgs: (...args: any) => void
 }
 
-// 日志输出端
-export interface LoggerOutput {
-    printArgs:(...args)=>void
-    print: (msg) => void
-    format: (header: string, timestamp: string, level: Level, msg: string) => string
-}
-
-
-// 默认输出
-export class DefaultOutput implements LoggerOutput {
-    printArgs(...args: any[]){
-        console.log(...args);
-    }
-    print(msg: any) {
-        console.log(msg)
-    }
-    format(header: string, timestamp: string, level: Level, msg: string) {
-        let levelMsg=""
-        switch(level){
-            case Level.ALL:{
-                levelMsg="ALL";
-            }break;
-            case Level.TRACE:{
-                levelMsg="TRACE";
-            }break;
-            case Level.DEBUG:{
-                levelMsg="DEBUG";
-            }break;
-            case Level.INFO:{
-                levelMsg="INFO";
-            }break;
-            case Level.WARN:{
-                levelMsg="WARN";
-            }break;
-            case Level.ERROR:{
-                levelMsg="ERROR";
-            }break;
-            case Level.FATAL:{
-                levelMsg="FATAL";
-            }break;
-            case Level.OFF:{
-                levelMsg="OFF";
-            }break;
-            default:{
-                levelMsg="Unknown";
-            }
-        }
-        // 2020-11-12
-        return `${timestamp} [${levelMsg.padEnd(5," ")}] ${header}: ${msg}`;
-    }
-}
-
-export interface Logger{
-    log:(level: Level, msg: string)=>void
-    trace:(msg: string)=>void
-    debug:(msg: string)=>void
-    info:(msg: string)=>void
-    warn:(msg: string)=>void
-    error:(msg: string)=>void
-    fatal:(msg: string)=>void
-    
-    logArgs:(level: Level, ...args:any)=>void
-    traceArgs:(...args:any)=>void
-    debugArgs:(...args:any)=>void
-    infoArgs:(...args:any)=>void
-    warnArgs:(...args:any)=>void
-    errorArgs:(...args:any)=>void
-    fatalArgs:(...args:any)=>void
-}
-
-export class TypeLogger implements Logger {
+export class ConsoleLogger implements Logger {
     protected level: Level;
     protected header: string;
-    protected formate: string;
+    protected timeFormate: string;
 
-    protected loggerOutput: LoggerOutput = null;
-    constructor(classType: Constructor<any>, level: Level = Level.INFO) {
+    protected loggerOutput: LoggerOutput = new DefaultOutput();
+
+    constructor(classType: Constructor<any>, level: Level = Level.INFO, timeFormate: string = "$yy-$mon-$dd $hh:$min:$ss") {
         this.level = level
         this.header = classType.name;
-        this.formate = "$yy-$mon-$dd $hh:$min:$ss";
-        this.loggerOutput = new DefaultOutput()
+        this.timeFormate = timeFormate;
     }
 
     resetHeader(header: string) {
@@ -98,13 +46,13 @@ export class TypeLogger implements Logger {
     resetOutput(output: LoggerOutput) {
         this.loggerOutput = output;
     }
-    resetFormate(formate:string){
-        this.formate = formate;
+    resetTimeFormate(timeFormate: string) {
+        this.timeFormate = timeFormate;
     }
 
     log(level: Level, msg: string) {
         if (level >= this.level) {
-            msg = this.loggerOutput.format(this.header, TimeUtils.formatDate(new Date(), this.formate), this.level, msg)
+            msg = this.loggerOutput.format(this.header, TimeUtils.formatDate(new Date(), this.timeFormate), level, msg)
             this.loggerOutput.print(msg)
         }
     }
@@ -128,28 +76,28 @@ export class TypeLogger implements Logger {
     }
 
 
-    logArgs(level: Level, ...args: any){
+    logArgs(level: Level, ...args: any) {
         if (level >= this.level) {
-            let msg = this.loggerOutput.format(this.header, TimeUtils.formatDate(new Date(), this.formate), this.level, "")
-            this.loggerOutput.printArgs(msg,...args)
+            let msg = this.loggerOutput.format(this.header, TimeUtils.formatDate(new Date(), this.timeFormate), this.level, args)
+            this.loggerOutput.printArgs(msg, ...args)
         }
     }
-    traceArgs(...args: any){
-        this.logArgs(Level.TRACE,...args);
+    traceArgs(...args: any) {
+        this.logArgs(Level.TRACE, ...args);
     }
-    debugArgs(...args: any){
-        this.logArgs(Level.DEBUG,...args);
+    debugArgs(...args: any) {
+        this.logArgs(Level.DEBUG, ...args);
     }
-    infoArgs(...args: any){
-        this.logArgs(Level.INFO,...args);
+    infoArgs(...args: any) {
+        this.logArgs(Level.INFO, ...args);
     }
-    warnArgs(...args: any){
-        this.logArgs(Level.WARN,...args);
+    warnArgs(...args: any) {
+        this.logArgs(Level.WARN, ...args);
     }
-    errorArgs(...args: any){
-        this.logArgs(Level.ERROR,...args);
+    errorArgs(...args: any) {
+        this.logArgs(Level.ERROR, ...args);
     }
-    fatalArgs(...args: any){
-        this.logArgs(Level.FATAL,...args);
+    fatalArgs(...args: any) {
+        this.logArgs(Level.FATAL, ...args);
     }
 }

@@ -10,23 +10,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ObjBox = void 0;
-const fs_extra = require("fs-extra");
-const Logger_1 = require("../libs/logger/Logger");
+const LoggerManagerConfig_1 = require("../libs/logger/LoggerManagerConfig");
 const LoggerManager_1 = require("../libs/logger/LoggerManager");
-const TimeUtils_1 = require("../libs/Utils/TimeUtils");
 const Annotations_1 = require("./annotation/Annotations");
 const Annotations_2 = require("./annotation/Annotations");
 const ScanDir_1 = require("./entity/ScanDir");
 class ObjBox {
-    constructor(loggerConfig) {
+    constructor(loggerConfig, fs_extra = null) {
         this.config = {
             version: [1, 0, 0],
-            objBoxLogger: {
-                fileOutputLevel: Logger_1.Level.OFF,
-                consoleOutputLevel: Logger_1.Level.ALL,
-                outPutDir: __dirname + "/../logs",
-                fileTemplate: `${TimeUtils_1.TimeFlag.Year}-${TimeUtils_1.TimeFlag.Month}-${TimeUtils_1.TimeFlag.Day}.log`
-            }
+            objBoxLogger: LoggerManagerConfig_1.DefaultManagerConfig
         };
         /**
          * 应用处理器模板
@@ -55,6 +48,9 @@ class ObjBox {
         }
         this.loggerManager = new LoggerManager_1.LoggerManager(this.config.objBoxLogger);
         this.logger = this.loggerManager.getLogger(ObjBox);
+        if (ObjBox.fs_extra == null && fs_extra != null) {
+            ObjBox.fs_extra = fs_extra;
+        }
     }
     /**
      * 重置日志
@@ -75,6 +71,11 @@ class ObjBox {
     getLoggerManager() {
         return this.loggerManager;
     }
+    static testFsExtra() {
+        if (ObjBox.fs_extra == null) {
+            throw new Error("You must set fs-extra into ObjBox before you register from files.");
+        }
+    }
     /**
      * 判断一个函数是否是class（构造函数）
      * @param fun
@@ -87,9 +88,10 @@ class ObjBox {
      * @param path
      */
     static isJSFile(path) {
+        ObjBox.testFsExtra();
         let endness = ".js";
-        if (path != null && fs_extra.existsSync(path)) {
-            return fs_extra.statSync(path).isFile() && path.indexOf(endness) == path.length - endness.length;
+        if (path != null && ObjBox.fs_extra.existsSync(path)) {
+            return ObjBox.fs_extra.statSync(path).isFile() && path.indexOf(endness) == path.length - endness.length;
         }
         return false;
     }
@@ -116,15 +118,16 @@ class ObjBox {
      * @param scannedDirs
      */
     static listAllFiles(scannedDirs) {
+        ObjBox.testFsExtra();
         let result = [];
         if (scannedDirs != null && scannedDirs.length > 0) {
             for (let scannedDir of scannedDirs) {
-                if (fs_extra.existsSync(scannedDir.dirPath)) {
-                    if (fs_extra.statSync(scannedDir.dirPath).isFile()) {
+                if (ObjBox.fs_extra.existsSync(scannedDir.dirPath)) {
+                    if (ObjBox.fs_extra.statSync(scannedDir.dirPath).isFile()) {
                         result.push(scannedDir.dirPath);
                     }
                     else {
-                        let files = fs_extra.readdirSync(scannedDir.dirPath);
+                        let files = ObjBox.fs_extra.readdirSync(scannedDir.dirPath);
                         for (let eacnfileName of files) {
                             if (!scannedDir.isExclude(eacnfileName)) {
                                 let childFiles = ObjBox.listAllFiles([new ScanDir_1.ScanDir(scannedDir.dirPath + "/" + eacnfileName, scannedDir.excludeRegExp)]);
@@ -903,6 +906,7 @@ class ObjBox {
     }
 }
 exports.ObjBox = ObjBox;
+ObjBox.fs_extra = null;
 /**
  * 基于typescript与nodejs的轻量级IOC容器
  *

@@ -1,5 +1,5 @@
-import { ComponentHandler, ScannedTemplate, ComponentHandlerInterface, ComponentInterface, ObjBoxInterface } from '../';
-import { Logger } from '../libs';
+import { ComponentHandler, ScannedTemplate, ComponentHandlerInterface, ComponentInterface, ObjBoxInterface } from '../..';
+import { Logger } from '../../libs';
 
 @ComponentHandler()
 export class DefaultComponentHandler implements ComponentHandlerInterface {
@@ -10,7 +10,7 @@ export class DefaultComponentHandler implements ComponentHandlerInterface {
         }
 
         let path = template.filePath;
-        let index = path.search(/([a-zA-Z0-9_\- ]+(\\|\/)+){2}[a-zA-Z0-9_\ ]+.js/)
+        let index = path.search(/([a-zA-Z0-9_\-. ]+(\\|\/)+){2}[a-zA-Z0-9_\-. ]+.js/)
         if (index >= 0) {
             path = path.slice(index)
         }

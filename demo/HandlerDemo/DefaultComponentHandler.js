@@ -8,7 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var DefaultComponentHandler_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DefaultComponentHandler = void 0;
-const __1 = require("../");
+const __1 = require("../..");
 let DefaultComponentHandler = DefaultComponentHandler_1 = class DefaultComponentHandler {
     constructor() {
         this.logger = null;
@@ -18,7 +18,7 @@ let DefaultComponentHandler = DefaultComponentHandler_1 = class DefaultComponent
             this.logger = objbox.getLoggerManager().getLogger(DefaultComponentHandler_1);
         }
         let path = template.filePath;
-        let index = path.search(/([a-zA-Z0-9_\- ]+(\\|\/)+){2}[a-zA-Z0-9_\ ]+.js/);
+        let index = path.search(/([a-zA-Z0-9_\-. ]+(\\|\/)+){2}[a-zA-Z0-9_\-. ]+.js/);
         if (index >= 0) {
             path = path.slice(index);
         }

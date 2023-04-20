@@ -7,8 +7,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ComponentScanTest = exports.R2 = exports.R1 = exports.Main = exports.MyBeanComponent = exports.B = exports.A = void 0;
-const __1 = require("../");
-const ComponentScan_annotation_1 = require("./ComponentScanDemo/ComponentScan.annotation");
+const __1 = require("../..");
+const ComponentScan_annotation_1 = require("../ComponentScanDemo/ComponentScan.annotation");
 // @Component()
 // export class DefaultComponent implements TemplateHandler{
 //     created(){

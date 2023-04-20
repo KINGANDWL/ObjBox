@@ -1,8 +1,6 @@
-import * as fs_extra from 'fs-extra';
-import { Level, Logger } from "../libs/logger/Logger";
-import { LoggerManagerConfig } from "../libs/logger/LoggerManagerConfig";
+import { Logger } from "../libs/logger/Logger";
+import { DefaultManagerConfig, LoggerManagerConfig } from "../libs/logger/LoggerManagerConfig";
 import { LoggerManager } from "../libs/logger/LoggerManager";
-import { TimeFlag } from "../libs/Utils/TimeUtils";
 import { Constructor, ScannedTemplate, BeanMethod } from './interface/base/ScannedTemplate.interface';
 import { ComponentInterface } from './interface/base/Component.interface';
 import { Component as ComponentAnnotation, ApplicationHandler, ComponentHandler, ComponentAnnotationArgs, BeanComponent, Bean, BeanAnnotationArgs, AutowirePropertyAnnotationArgs, AutowireProperty, AutowireMethod, AutowireMethodAnnotationArgs, Annotations, Component } from './annotation/Annotations';
@@ -17,12 +15,7 @@ import { ScanDir } from "./entity/ScanDir";
 export class ObjBox implements ObjBoxInterface {
     private config = {
         version: [1, 0, 0],
-        objBoxLogger: {
-            fileOutputLevel: Level.OFF,
-            consoleOutputLevel: Level.ALL,
-            outPutDir: __dirname + "/../logs",
-            fileTemplate: `${TimeFlag.Year}-${TimeFlag.Month}-${TimeFlag.Day}.log`
-        }
+        objBoxLogger: DefaultManagerConfig
     }
     private logger: Logger
     private loggerManager: LoggerManager
@@ -49,7 +42,8 @@ export class ObjBox implements ObjBoxInterface {
         running: false
     }
 
-    constructor(loggerConfig?: LoggerManagerConfig) {
+    private static fs_extra: any = null
+    constructor(loggerConfig?: LoggerManagerConfig, fs_extra: any = null) {
         if (loggerConfig != null) {
             for (let i in loggerConfig) {
                 this.config.objBoxLogger[i] = loggerConfig[i]
@@ -57,6 +51,9 @@ export class ObjBox implements ObjBoxInterface {
         }
         this.loggerManager = new LoggerManager(this.config.objBoxLogger)
         this.logger = this.loggerManager.getLogger(ObjBox);
+        if(ObjBox.fs_extra == null && fs_extra !=  null){
+            ObjBox.fs_extra = fs_extra
+        }
     }
     /**
      * 重置日志
@@ -79,6 +76,11 @@ export class ObjBox implements ObjBoxInterface {
     }
 
 
+    private static testFsExtra(){
+        if(ObjBox.fs_extra == null){
+            throw new Error("You must set fs-extra into ObjBox before you register from files.")
+        }
+    }
     /**
      * 判断一个函数是否是class（构造函数）
      * @param fun 
@@ -91,9 +93,10 @@ export class ObjBox implements ObjBoxInterface {
      * @param path 
      */
     private static isJSFile(path: string): boolean {
+        ObjBox.testFsExtra()
         let endness = ".js";
-        if (path != null && fs_extra.existsSync(path)) {
-            return fs_extra.statSync(path).isFile() && path.indexOf(endness) == path.length - endness.length
+        if (path != null && ObjBox.fs_extra.existsSync(path)) {
+            return ObjBox.fs_extra.statSync(path).isFile() && path.indexOf(endness) == path.length - endness.length
         }
         return false
     }
@@ -119,16 +122,17 @@ export class ObjBox implements ObjBoxInterface {
      * @param scannedDirs 
      */
     private static listAllFiles(scannedDirs: ScanDir[]): string[] {
+        ObjBox.testFsExtra()
         let result: string[] = []
         if (scannedDirs != null && scannedDirs.length > 0) {
             for (let scannedDir of scannedDirs) {
-                if (fs_extra.existsSync(scannedDir.dirPath)) {
-                    if (fs_extra.statSync(scannedDir.dirPath).isFile()) {
+                if (ObjBox.fs_extra.existsSync(scannedDir.dirPath)) {
+                    if (ObjBox.fs_extra.statSync(scannedDir.dirPath).isFile()) {
                         result.push(scannedDir.dirPath)
                     } else {
-                        let files = fs_extra.readdirSync(scannedDir.dirPath)
+                        let files = ObjBox.fs_extra.readdirSync(scannedDir.dirPath)
                         for (let eacnfileName of files) {
-                            if(!scannedDir.isExclude(eacnfileName)){
+                            if (!scannedDir.isExclude(eacnfileName)) {
                                 let childFiles = ObjBox.listAllFiles([new ScanDir(scannedDir.dirPath + "/" + eacnfileName, scannedDir.excludeRegExp)])
                                 result = result.concat(childFiles);
                             }

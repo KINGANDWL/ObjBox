@@ -1,5 +1,4 @@
 "use strict";
-//main.ts
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -17,9 +16,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Log = void 0;
+//main.ts
 const __1 = require("../../");
 const libs_1 = require("../..//libs");
 const __2 = require("../../");
+const Level_1 = require("../../libs/logger/Level");
+const fs_extra = require("fs-extra");
 /**
  * 默认方法注解模板
  * @param yourArg1
@@ -67,14 +69,16 @@ function main() {
     return __awaiter(this, void 0, void 0, function* () {
         // 配置容器日志（非必要）
         let loggerConfig = {
-            fileOutputLevel: libs_1.Level.OFF,
-            consoleOutputLevel: libs_1.Level.OFF,
-            outPutDir: __dirname + "/logs",
-            fileTemplate: `${libs_1.TimeFlag.Year}-${libs_1.TimeFlag.Month}-${libs_1.TimeFlag.Day}.log`
+            level: Level_1.Level.ALL,
+            timeFormate: `${libs_1.TimeFlag.Year}-${libs_1.TimeFlag.Month}-${libs_1.TimeFlag.Day} ${libs_1.TimeFlag.Hour}:${libs_1.TimeFlag.Minute}:${libs_1.TimeFlag.Second}`
         };
-        let ob = __1.ObjBoxHelper.newObjBox(loggerConfig);
+        let ob = __1.ObjBoxHelper.newObjBox(loggerConfig, fs_extra);
         ob.registerFromClass(LogHandler);
         ob.registerFromClass(YourClass);
+        yield ob.registerFromFiles([
+            new __1.ScanDir(__dirname + "/../HandlerDemo/"),
+            new __1.ScanDir(__dirname + "/../ComponentScanDemo/")
+        ]);
         // 启动装载
         yield ob.load();
         //启动容器应用

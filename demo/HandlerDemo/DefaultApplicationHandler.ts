@@ -1,5 +1,5 @@
-import { ApplicationHandler, ApplicationHandlerInterface, ScannedTemplate, ObjBoxInterface } from '../';
-import { Logger } from '../libs';
+import { ApplicationHandler, ApplicationHandlerInterface, ScannedTemplate, ObjBoxInterface } from '../..';
+import { Logger } from '../../libs';
 
 @ApplicationHandler()
 export class DefaultApplicationHandler implements ApplicationHandlerInterface {

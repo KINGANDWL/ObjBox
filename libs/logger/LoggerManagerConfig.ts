@@ -1,15 +1,12 @@
-import { Level } from "./Logger"
+import { TimeFlag } from "../Utils/TimeUtils";
+import { Level } from "./Level"
+
 export interface LoggerManagerConfig {
-    fileOutputLevel: Level
-    consoleOutputLevel: Level
-    outPutDir: string
-    fileTemplate: string
+    level: Level;
+    timeFormate: string;
 }
 
-
-// let config: LoggerManagerConfig = {
-//     fileOutputLevel: Level.OFF,
-//     consoleOutputLevel: Level.ALL,
-//     outPutDir: __dirname + "/logs",
-//     fileTemplate: `${TimeFlag.Year}-${TimeFlag.Month}-${TimeFlag.Day}.log`
-// }
+export let DefaultManagerConfig:LoggerManagerConfig = {
+    level : Level.ALL,
+    timeFormate: `${TimeFlag.Year}-${TimeFlag.Month}-${TimeFlag.Day} ${TimeFlag.Hour}:${TimeFlag.Minute}:${TimeFlag.Second}`
+}

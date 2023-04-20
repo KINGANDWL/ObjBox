@@ -26,7 +26,7 @@
     	"compilerOptions": {
     		"experimentalDecorators": true, //开启装饰器【必须】
     		"module": "commonjs", // commonjs 模式【必须】
-    		"target": "ES6", // es6标准【必须】
+    		"target": "ES6", // es6标准【至少满足es6】
             "strict": false, // 关闭严格模式【推荐】，不然会出现一些编译上的繁琐问题 
     		"outDir": "./out",
     		"paths": {},
@@ -42,18 +42,16 @@
 # 基础样例
 
 ```js
-import { ComponentCreatedType, ObjBoxHelper, ScanDir } from "objbox";
+import { ComponentCreatedType, ObjBoxHelper } from "objbox";
 import { Level, LoggerManagerConfig, TimeFlag } from "objbox/libs";
-import { DefaultApplicationHandler } from "objbox/demo/DefaultApplicationHandler"
-import { DefaultComponentHandler } from "objbox/demo/DefaultComponentHandler"
+import { DefaultApplicationHandler } from "objbox/demo/HandlerDemo/DefaultApplicationHandler"
+import { DefaultComponentHandler } from "objbox/demo/HandlerDemo/DefaultComponentHandler"
 
 async function main() {
     // 配置容器日志（非必要）
     let loggerConfig: LoggerManagerConfig = {
-        fileOutputLevel: Level.OFF,
-        consoleOutputLevel: Level.ALL,
-        outPutDir: __dirname + "/logs",
-        fileTemplate: `${TimeFlag.Year}-${TimeFlag.Month}-${TimeFlag.Day}.log`
+        level: Level.ALL,
+        timeFormate: `${TimeFlag.Year}-${TimeFlag.Month}-${TimeFlag.Day} ${TimeFlag.Hour}:${TimeFlag.Minute}:${TimeFlag.Second}`
     }
 
     let ob = ObjBoxHelper.newObjBox(loggerConfig);
@@ -63,7 +61,7 @@ async function main() {
     ob.registerFromClass(DefaultComponentHandler)
 
 
-    // 方式1：从文件扫描与注册模板
+    // 方式1：从文件扫描与注册模板，需要导入fs-extra
     // await ob.registerFromFiles([
     //     new ScanDir(__dirname + "/src")
     // ])
@@ -186,21 +184,20 @@ main()
 ```js
 //main.ts
 
-import { ComponentCreatedType, ObjBoxHelper, ScanDir } from "objbox";
+import { ObjBoxHelper, ScanDir } from "objbox";
 import { Level, LoggerManagerConfig, TimeFlag } from "objbox/libs";
-import { DefaultApplicationHandler } from "objbox/demo/DefaultApplicationHandler"
-import { DefaultComponentHandler } from "objbox/demo/DefaultComponentHandler"
+import { DefaultApplicationHandler } from "objbox/demo/HandlerDemo/DefaultApplicationHandler"
+import { DefaultComponentHandler } from "objbox/demo/HandlerDemo/DefaultComponentHandler"
+import * as fs_extra from 'fs-extra';
 
 async function main() {
     // 配置容器日志（非必要）
     let loggerConfig: LoggerManagerConfig = {
-        fileOutputLevel: Level.OFF,
-        consoleOutputLevel: Level.ALL,
-        outPutDir: __dirname + "/logs",
-        fileTemplate: `${TimeFlag.Year}-${TimeFlag.Month}-${TimeFlag.Day}.log`
+        level: Level.ALL,
+        timeFormate: `${TimeFlag.Year}-${TimeFlag.Month}-${TimeFlag.Day} ${TimeFlag.Hour}:${TimeFlag.Minute}:${TimeFlag.Second}`
     }
 
-    let ob = ObjBoxHelper.newObjBox(loggerConfig);
+    let ob = ObjBoxHelper.newObjBox(loggerConfig,fs_extra);
 
     // 注册处理器（非必要）
     ob.registerFromClass(DefaultApplicationHandler)
@@ -336,11 +333,8 @@ objbox anno-methodArg <name> <path>     //create an annotation of methodArg in p
 
 ```typescript
 //main.ts
-
-import { Component, ComponentHandler, ComponentHandlerInterface, ObjBoxHelper, ObjBoxInterface, ScannedTemplate } from "objbox";
-import { Level, LoggerManagerConfig, TimeFlag } from "objbox/libs";
-import { getFunName, registerMethod } from "objbox"
-
+import { Component, ComponentHandler, ComponentHandlerInterface, ObjBoxHelper, ObjBoxInterface, ScanDir, ScannedTemplate, getFunName, registerMethod } from "objbox";
+import { LoggerManagerConfig, TimeFlag, Level } from "objbox/libs";
 
 /**
  * 默认方法注解模板
@@ -357,17 +351,17 @@ export function Log(): MethodDecorator {
     }
 }
 @ComponentHandler()
-class LogHandler implements ComponentHandlerInterface{
+class LogHandler implements ComponentHandlerInterface {
     scanned: (objbox: ObjBoxInterface, template: ScannedTemplate) => void;
-    created(objbox: ObjBoxInterface, template: ScannedTemplate, component: any){
-        let methodAnnos = ObjBoxHelper.getMethodsAnnotationFromComponent(Log.name,component)
-        for(let methodAnno of methodAnnos){
-            ObjBoxHelper.insertFunctionBeforeMethod(component,methodAnno.methodName,(...args)=>{
-                console.log("args: ",...args);
+    created(objbox: ObjBoxInterface, template: ScannedTemplate, component: any) {
+        let methodAnnos = ObjBoxHelper.getMethodsAnnotationFromComponent(Log.name, component)
+        for (let methodAnno of methodAnnos) {
+            ObjBoxHelper.insertFunctionBeforeMethod(component, methodAnno.methodName, (...args) => {
+                console.log("args: ", ...args);
                 return args
             })
-            ObjBoxHelper.insertFunctionAfterMethod(component,methodAnno.methodName,(result:any)=>{
-                console.log("result: "+result)
+            ObjBoxHelper.insertFunctionAfterMethod(component, methodAnno.methodName, (result: any) => {
+                console.log("result: " + result)
                 return result
             })
         }
@@ -394,10 +388,8 @@ class YourClass {
 async function main() {
     // 配置容器日志（非必要）
     let loggerConfig: LoggerManagerConfig = {
-        fileOutputLevel: Level.OFF,
-        consoleOutputLevel: Level.OFF,
-        outPutDir: __dirname + "/logs",
-        fileTemplate: `${TimeFlag.Year}-${TimeFlag.Month}-${TimeFlag.Day}.log`
+        level: Level.ALL,
+        timeFormate: `${TimeFlag.Year}-${TimeFlag.Month}-${TimeFlag.Day} ${TimeFlag.Hour}:${TimeFlag.Minute}:${TimeFlag.Second}`
     }
 
     let ob = ObjBoxHelper.newObjBox(loggerConfig);
@@ -412,12 +404,8 @@ async function main() {
     ob.run();
 
 
-    let yourclass : YourClass = ob.getComponent(YourClass.name)
-    yourclass.add(123,456);
-    /**
-    args: 123 456
-    result: 579
-    */
+    let yourclass: YourClass = ob.getComponent(YourClass.name)
+    yourclass.add(123, 456);
 }
 main()
 ```

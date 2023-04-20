@@ -17,7 +17,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var DefaultApplicationHandler_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DefaultApplicationHandler = void 0;
-const __1 = require("../");
+const __1 = require("../..");
 let DefaultApplicationHandler = DefaultApplicationHandler_1 = class DefaultApplicationHandler {
     constructor() {
         this.logger = null;
