@@ -167,7 +167,7 @@ export class ObjBox implements ObjBoxInterface {
      */
     public static isObjectTypeofComponent(obj: any): boolean {
         if (obj != null) {
-            let prot = obj.prototype as ComponentInterface
+            let prot = obj as ComponentInterface
             // 符合注解体要求
             if (prot != null && prot._annotations_ != null && prot._annotations_.clazz != null) {
                 if (prot._annotations_.clazz.annotationNameMap != null) {
@@ -419,7 +419,7 @@ export class ObjBox implements ObjBoxInterface {
                     sTemplate.instances.push(result);
                 }
 
-                if (sTemplate.originalType == ComponentOriginalType.Component) {
+                if (sTemplate.originalType == ComponentOriginalType.Component || sTemplate.newInstance.prototype._annotations_ == null) {
                     //使用class的prototype
                     result._annotations_ = sTemplate.newInstance.prototype._annotations_
                 } else {

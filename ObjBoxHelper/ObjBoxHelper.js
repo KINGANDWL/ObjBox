@@ -83,9 +83,12 @@ class ObjBoxHelper {
      */
     static doesComponentHaveClassAnnotation(annotationName, component) {
         if (annotationName != null && ObjBoxHelper.isObjectTypeofComponent(component)) {
-            if (component._annotations_.scannedTemplate.originalType == Annotations_1.ComponentOriginalType.Component) {
-                return component._annotations_.clazz.getAnnotation(annotationName) != null;
-            }
+            // if(component._annotations_.scannedTemplate != null){
+            //     if (component._annotations_.scannedTemplate.originalType == ComponentOriginalType.Component) {
+            //         return component._annotations_.clazz.getAnnotation(annotationName) != null
+            //     }
+            // }
+            return component._annotations_.clazz.getAnnotation(annotationName) != null;
         }
         return false;
     }

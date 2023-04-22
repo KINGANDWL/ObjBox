@@ -162,7 +162,7 @@ class ObjBox {
      */
     static isObjectTypeofComponent(obj) {
         if (obj != null) {
-            let prot = obj.prototype;
+            let prot = obj;
             // 符合注解体要求
             if (prot != null && prot._annotations_ != null && prot._annotations_.clazz != null) {
                 if (prot._annotations_.clazz.annotationNameMap != null) {
@@ -404,7 +404,7 @@ class ObjBox {
                 else {
                     sTemplate.instances.push(result);
                 }
-                if (sTemplate.originalType == Annotations_2.ComponentOriginalType.Component) {
+                if (sTemplate.originalType == Annotations_2.ComponentOriginalType.Component || sTemplate.newInstance.prototype._annotations_ == null) {
                     //使用class的prototype
                     result._annotations_ = sTemplate.newInstance.prototype._annotations_;
                 }
