@@ -102,8 +102,10 @@ export class ObjBoxHelper {
      */
     public static doesComponentHaveClassAnnotation(annotationName: string, component: ComponentInterface): boolean {
         if (annotationName != null && ObjBoxHelper.isObjectTypeofComponent(component)) {
-            if (component._annotations_.scannedTemplate.originalType == ComponentOriginalType.Component) {
-                return component._annotations_.clazz.getAnnotation(annotationName) != null
+            if(component._annotations_.scannedTemplate != null){
+                if (component._annotations_.scannedTemplate.originalType == ComponentOriginalType.Component) {
+                    return component._annotations_.clazz.getAnnotation(annotationName) != null
+                }
             }
         }
         return false
