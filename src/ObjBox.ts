@@ -419,11 +419,13 @@ export class ObjBox implements ObjBoxInterface {
                     sTemplate.instances.push(result);
                 }
 
-                if (sTemplate.originalType == ComponentOriginalType.Component || sTemplate.newInstance.prototype._annotations_ != null) {
-                    //使用class的prototype
-                    result._annotations_ = sTemplate.newInstance.prototype._annotations_
-                } else {
-                    result._annotations_ = new Annotations()
+                if(result._annotations_ == null){
+                    if (sTemplate.newInstance.prototype._annotations_ != null) {
+                        //使用class的prototype
+                        result._annotations_ = sTemplate.newInstance.prototype._annotations_
+                    } else {
+                        result._annotations_ = new Annotations()
+                    }
                 }
 
                 result._preComponents_ = []

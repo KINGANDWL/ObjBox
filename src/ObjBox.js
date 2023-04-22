@@ -404,12 +404,14 @@ class ObjBox {
                 else {
                     sTemplate.instances.push(result);
                 }
-                if (sTemplate.originalType == Annotations_2.ComponentOriginalType.Component || sTemplate.newInstance.prototype._annotations_ != null) {
-                    //使用class的prototype
-                    result._annotations_ = sTemplate.newInstance.prototype._annotations_;
-                }
-                else {
-                    result._annotations_ = new Annotations_1.Annotations();
+                if (result._annotations_ == null) {
+                    if (sTemplate.newInstance.prototype._annotations_ != null) {
+                        //使用class的prototype
+                        result._annotations_ = sTemplate.newInstance.prototype._annotations_;
+                    }
+                    else {
+                        result._annotations_ = new Annotations_1.Annotations();
+                    }
                 }
                 result._preComponents_ = [];
                 //模板与实例化绑定
