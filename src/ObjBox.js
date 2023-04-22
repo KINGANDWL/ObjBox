@@ -404,7 +404,7 @@ class ObjBox {
                 else {
                     sTemplate.instances.push(result);
                 }
-                if (sTemplate.originalType == Annotations_2.ComponentOriginalType.Component || sTemplate.newInstance.prototype._annotations_ == null) {
+                if (sTemplate.originalType == Annotations_2.ComponentOriginalType.Component || sTemplate.newInstance.prototype._annotations_ != null) {
                     //使用class的prototype
                     result._annotations_ = sTemplate.newInstance.prototype._annotations_;
                 }
