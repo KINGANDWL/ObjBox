@@ -73,7 +73,7 @@ export interface ObjBoxInterface {
      * @param obj 任意obj对象
      * @param name 组件名称 
      */
-    registerByObject: (obj: Object, name: string) => void
+    registerByObject: (obj: Object, name: string, scope?: ComponentCreatedType) => void
     /**
      * 从文件注册模板
      * @param clazz class名称
