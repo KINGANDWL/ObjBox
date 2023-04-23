@@ -168,6 +168,7 @@ function registerClass(annotationName, args, target) {
             target.prototype._annotations_ = new Annotations();
         }
         let _annotations_ = target.prototype._annotations_;
+        _annotations_.classConstructor = target;
         _annotations_.clazz.pushAnnotation(annotationName, args);
     }
 }

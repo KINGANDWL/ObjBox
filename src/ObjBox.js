@@ -190,7 +190,7 @@ class ObjBox {
             newInstance: fun,
             filePath: filePath,
             instances: [],
-            createdType: componentAnnotation == null ? Annotations_2.ComponentCreatedType.Singleton : componentAnnotation.annotationArgs.scope,
+            createdType: componentAnnotation == null ? Annotations_1.ComponentCreatedType.Singleton : componentAnnotation.annotationArgs.scope,
             originalType: Annotations_2.ComponentOriginalType.Component
         };
         return temp;
@@ -391,7 +391,7 @@ class ObjBox {
     static createComponentFromTemplate(sTemplate) {
         let result = null;
         if (sTemplate != null) {
-            if (sTemplate.instances == null || sTemplate.instances.length <= 0 || sTemplate.createdType == Annotations_2.ComponentCreatedType.Factory) {
+            if (sTemplate.instances == null || sTemplate.instances.length <= 0 || sTemplate.createdType == Annotations_1.ComponentCreatedType.Factory) {
                 if (sTemplate.originalType == Annotations_2.ComponentOriginalType.Component) {
                     result = new sTemplate.newInstance();
                 }
@@ -594,7 +594,7 @@ class ObjBox {
      */
     getSingletonInstanceFromTemplate(template) {
         if (template != null) {
-            if (template.createdType == Annotations_2.ComponentCreatedType.Singleton) {
+            if (template.createdType == Annotations_1.ComponentCreatedType.Singleton) {
                 if (template.instances != null && template.instances.length > 0) {
                     return template.instances[0];
                 }
@@ -779,7 +779,7 @@ class ObjBox {
         if (name == null)
             name = con.name;
         if (scope == null)
-            scope = Annotations_2.ComponentCreatedType.Singleton;
+            scope = Annotations_1.ComponentCreatedType.Singleton;
         // 普通的未处理的class
         if (!ObjBox.isFunctionTypeofTemplate(con)) {
             con.prototype._annotations_ = new Annotations_1.Annotations();
@@ -801,7 +801,7 @@ class ObjBox {
         if (name == null)
             name = method.name;
         if (scope == null)
-            scope = Annotations_2.ComponentCreatedType.Singleton;
+            scope = Annotations_1.ComponentCreatedType.Singleton;
         let temp = {
             componentName: name,
             className: "@" + Annotations_1.Bean.name,
@@ -818,10 +818,21 @@ class ObjBox {
      * @param obj 任意obj对象
      * @param name 组件名称
      */
-    registerByObject(obj, name) {
-        this.registerFromMethod(function () {
-            return obj;
-        }, name, Annotations_2.ComponentCreatedType.Singleton);
+    registerByObject(obj, name, scope) {
+        if (ObjBox.isObjectTypeofComponent(obj)) {
+            // 如果对象内部存储着类信息
+            let componentObj = obj;
+            if (componentObj._annotations_.classConstructor != null) {
+                let con = componentObj._annotations_.classConstructor;
+                this.registerFromClass(con, name, scope == null ? Annotations_1.ComponentCreatedType.Singleton : scope);
+                return;
+            }
+        }
+        else {
+            this.registerFromMethod(function () {
+                return obj;
+            }, name, scope == null ? Annotations_1.ComponentCreatedType.Singleton : scope);
+        }
     }
     /**
      * 开始装载所有注册模板

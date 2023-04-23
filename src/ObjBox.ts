@@ -3,8 +3,8 @@ import { DefaultManagerConfig, LoggerManagerConfig } from "../libs/logger/Logger
 import { LoggerManager } from "../libs/logger/LoggerManager";
 import { Constructor, ScannedTemplate, BeanMethod } from './interface/base/ScannedTemplate.interface';
 import { ComponentInterface } from './interface/base/Component.interface';
-import { Component as ComponentAnnotation, ApplicationHandler, ComponentHandler, ComponentAnnotationArgs, BeanComponent, Bean, BeanAnnotationArgs, AutowirePropertyAnnotationArgs, AutowireProperty, AutowireMethod, AutowireMethodAnnotationArgs, Annotations, Component } from './annotation/Annotations';
-import { ComponentCreatedType, ComponentOriginalType } from "./annotation/Annotations";
+import { Component as ComponentAnnotation, ApplicationHandler, ComponentHandler, ComponentAnnotationArgs, BeanComponent, Bean, BeanAnnotationArgs, AutowirePropertyAnnotationArgs, AutowireProperty, AutowireMethod, AutowireMethodAnnotationArgs, Annotations, Component, ComponentCreatedType } from './annotation/Annotations';
+import { ComponentOriginalType } from "./annotation/Annotations";
 import { ApplicationHandlerInterface } from "./interface/ApplicationHandler.interface";
 import { ComponentHandlerInterface } from "./interface/ComponentHandler.interface";
 import { TemplateHandler } from "./interface/TemplateHandler.interface";
@@ -51,7 +51,7 @@ export class ObjBox implements ObjBoxInterface {
         }
         this.loggerManager = new LoggerManager(this.config.objBoxLogger)
         this.logger = this.loggerManager.getLogger(ObjBox);
-        if(ObjBox.fs_extra == null && fs_extra !=  null){
+        if (ObjBox.fs_extra == null && fs_extra != null) {
             ObjBox.fs_extra = fs_extra
         }
     }
@@ -76,8 +76,8 @@ export class ObjBox implements ObjBoxInterface {
     }
 
 
-    private static testFsExtra(){
-        if(ObjBox.fs_extra == null){
+    private static testFsExtra() {
+        if (ObjBox.fs_extra == null) {
             throw new Error("You must set fs-extra into ObjBox before you register from files.")
         }
     }
@@ -419,7 +419,7 @@ export class ObjBox implements ObjBoxInterface {
                     sTemplate.instances.push(result);
                 }
 
-                if(result._annotations_ == null){
+                if (result._annotations_ == null) {
                     if (sTemplate.newInstance.prototype._annotations_ != null) {
                         //使用class的prototype
                         result._annotations_ = sTemplate.newInstance.prototype._annotations_
@@ -860,10 +860,20 @@ export class ObjBox implements ObjBoxInterface {
      * @param obj 任意obj对象
      * @param name 组件名称 
      */
-    registerByObject(obj: Object, name: string) {
-        this.registerFromMethod(function () {
-            return obj
-        }, name, ComponentCreatedType.Singleton)
+    registerByObject(obj: Object, name: string, scope?: ComponentCreatedType) {
+        if (ObjBox.isObjectTypeofComponent(obj)) {
+            // 如果对象内部存储着类信息
+            let componentObj = obj as ComponentInterface
+            if (componentObj._annotations_.classConstructor != null) {
+                let con = componentObj._annotations_.classConstructor;
+                this.registerFromClass(con, name, scope == null ? ComponentCreatedType.Singleton : scope)
+                return
+            }
+        } else {
+            this.registerFromMethod(function () {
+                return obj
+            }, name, scope == null ? ComponentCreatedType.Singleton : scope)
+        }
     }
 
 

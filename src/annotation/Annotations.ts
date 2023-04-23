@@ -1,5 +1,6 @@
 import { ScannedTemplate } from '../interface/base/ScannedTemplate.interface';
 import { ComponentInterface } from '../interface/base/Component.interface';
+import { Constructor } from '../interface/base/ScannedTemplate.interface';
 
 /**
  * 通过异常动态获取函数名
@@ -157,6 +158,7 @@ export class MethodArgumentsAnnotation {
  */
 export class Annotations {
     constructor() { }
+    classConstructor:undefined | Constructor
     scannedTemplate: ScannedTemplate
     clazz: ClassAnnotation = new ClassAnnotation()
     methods: MethodAnnotation = new MethodAnnotation()
@@ -223,6 +225,7 @@ export function registerClass<T>(annotationName: string, args: T, target: Functi
             target.prototype._annotations_ = new Annotations()
         }
         let _annotations_: Annotations = target.prototype._annotations_
+        _annotations_.classConstructor = target as Constructor
         _annotations_.clazz.pushAnnotation<T>(annotationName, args)
     }
 }
