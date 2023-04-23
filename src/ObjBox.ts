@@ -829,6 +829,11 @@ export class ObjBox implements ObjBoxInterface {
                 name: name,
                 scope: scope
             })
+        }else{
+            let componentAnno = con.prototype._annotations_.clazz.getAnnotation<ComponentAnnotationArgs>(Component.name)
+            if( componentAnno!= null){
+                componentAnno.annotationArgs.scope = scope
+            }
         }
 
         this.registerClass(con, "#registerFromClass")

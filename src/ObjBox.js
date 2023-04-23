@@ -789,6 +789,12 @@ class ObjBox {
                 scope: scope
             });
         }
+        else {
+            let componentAnno = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.Component.name);
+            if (componentAnno != null) {
+                componentAnno.annotationArgs.scope = scope;
+            }
+        }
         this.registerClass(con, "#registerFromClass");
     }
     /**
