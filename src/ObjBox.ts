@@ -872,6 +872,7 @@ export class ObjBox implements ObjBoxInterface {
             if (componentObj._annotations_.classConstructor != null) {
                 let con = componentObj._annotations_.classConstructor;
                 this.registerFromClass(con, name, scope == null ? ComponentCreatedType.Singleton : scope)
+                con.prototype._annotations_.scannedTemplate.instances = [obj as ComponentInterface]
                 return
             }
         } else {

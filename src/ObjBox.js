@@ -831,6 +831,7 @@ class ObjBox {
             if (componentObj._annotations_.classConstructor != null) {
                 let con = componentObj._annotations_.classConstructor;
                 this.registerFromClass(con, name, scope == null ? Annotations_1.ComponentCreatedType.Singleton : scope);
+                con.prototype._annotations_.scannedTemplate.instances = [obj];
                 return;
             }
         }
