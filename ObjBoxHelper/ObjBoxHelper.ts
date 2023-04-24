@@ -119,7 +119,10 @@ export class ObjBoxHelper {
     public static getClassAnnotationFromComponent<T = any>(annotationName: string, component: any): T {
         if (this.isObjectTypeofComponent(component)) {
             let _component = component as ComponentInterface
-            return _component._annotations_.clazz.getAnnotation<T>(annotationName).annotationArgs
+            let anno = _component._annotations_.clazz.getAnnotation<T>(annotationName)
+            if(anno != null){
+                return anno.annotationArgs
+            }
         }
         return null
     }
@@ -179,7 +182,10 @@ export class ObjBoxHelper {
     public static getClassAnnotationFromTemplate<T = any>(annotationName: string, template: ScannedTemplate): T {
         if (template != null) {
             let prot = template.newInstance.prototype
-            return prot._annotations_.clazz.getAnnotation<T>(annotationName).annotationArgs
+            let anno = prot._annotations_.clazz.getAnnotation<T>(annotationName)
+            if(anno != null){
+                return anno.annotationArgs
+            }
         }
         return null
     }

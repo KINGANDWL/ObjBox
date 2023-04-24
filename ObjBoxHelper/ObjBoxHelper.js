@@ -100,7 +100,10 @@ class ObjBoxHelper {
     static getClassAnnotationFromComponent(annotationName, component) {
         if (this.isObjectTypeofComponent(component)) {
             let _component = component;
-            return _component._annotations_.clazz.getAnnotation(annotationName).annotationArgs;
+            let anno = _component._annotations_.clazz.getAnnotation(annotationName);
+            if (anno != null) {
+                return anno.annotationArgs;
+            }
         }
         return null;
     }
@@ -157,7 +160,10 @@ class ObjBoxHelper {
     static getClassAnnotationFromTemplate(annotationName, template) {
         if (template != null) {
             let prot = template.newInstance.prototype;
-            return prot._annotations_.clazz.getAnnotation(annotationName).annotationArgs;
+            let anno = prot._annotations_.clazz.getAnnotation(annotationName);
+            if (anno != null) {
+                return anno.annotationArgs;
+            }
         }
         return null;
     }
