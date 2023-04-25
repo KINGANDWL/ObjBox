@@ -793,6 +793,7 @@ class ObjBox {
             let componentAnno = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.Component.name);
             if (componentAnno != null) {
                 componentAnno.annotationArgs.scope = scope;
+                componentAnno.annotationArgs.name = name;
             }
         }
         this.registerClass(con, "#registerFromClass");
