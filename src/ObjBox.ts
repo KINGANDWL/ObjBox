@@ -420,7 +420,7 @@ export class ObjBox implements ObjBoxInterface {
                 }
 
                 if (result._annotations_ == null) {
-                    if (sTemplate.newInstance.prototype._annotations_ != null) {
+                    if (sTemplate.newInstance.prototype != null && sTemplate.newInstance.prototype._annotations_ != null) {
                         //使用class的prototype
                         result._annotations_ = sTemplate.newInstance.prototype._annotations_
                     } else {
