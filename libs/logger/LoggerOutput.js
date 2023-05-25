@@ -58,7 +58,7 @@ class DefaultOutput {
             }
         }
         // 2020-11-12
-        return `${timestamp} [${levelMsg.padEnd(5, " ")}] ${header}: ${msg}`;
+        return `${timestamp} [${levelMsg.padEnd(5, " ")}] ${header}: ${msg.toString()}`;
     }
 }
 exports.DefaultOutput = DefaultOutput;

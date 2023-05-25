@@ -103,7 +103,7 @@ class ObjBox {
         return __awaiter(this, void 0, void 0, function* () {
             let result = [];
             if (ObjBox.isJSFile(path)) {
-                let fileExports = yield Promise.resolve().then(() => require(path.replace(/.js$/, "")));
+                let fileExports = yield Promise.resolve(`${path.replace(/.js$/, "")}`).then(s => require(s));
                 for (let index in fileExports) {
                     if (ObjBox.isClass(fileExports[index])) {
                         result.push(fileExports[index]);
@@ -926,8 +926,8 @@ class ObjBox {
     `);
     }
 }
-exports.ObjBox = ObjBox;
 ObjBox.fs_extra = null;
+exports.ObjBox = ObjBox;
 /**
  * 基于typescript与nodejs的轻量级IOC容器
  *

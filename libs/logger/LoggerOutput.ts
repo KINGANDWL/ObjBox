@@ -16,7 +16,7 @@ export class DefaultOutput implements LoggerOutput {
     print(msg: any) {
         console.log(msg)
     }
-    format(header: string, timestamp: string, level: Level, msg: string) {
+    format(header: string, timestamp: string, level: Level, msg: string | any[]) {
         let levelMsg = ""
         switch (level) {
             case Level.ALL: {
@@ -48,6 +48,6 @@ export class DefaultOutput implements LoggerOutput {
             }
         }
         // 2020-11-12
-        return `${timestamp} [${levelMsg.padEnd(5, " ")}] ${header}: ${msg}`;
+        return `${timestamp} [${levelMsg.padEnd(5, " ")}] ${header}: ${msg.toString()}`;
     }
 }
