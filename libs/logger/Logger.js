@@ -49,7 +49,7 @@ class ConsoleLogger {
     }
     logArgs(level, ...args) {
         if (level >= this.level) {
-            let msg = this.loggerOutput.format(this.header, TimeUtils_1.TimeUtils.formatDate(new Date(), this.timeFormate), this.level, args);
+            let msg = this.loggerOutput.format(this.header, TimeUtils_1.TimeUtils.formatDate(new Date(), this.timeFormate), level, args);
             this.loggerOutput.printArgs(msg, ...args);
         }
     }

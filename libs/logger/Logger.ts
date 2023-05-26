@@ -78,7 +78,7 @@ export class ConsoleLogger implements Logger {
 
     logArgs(level: Level, ...args: any) {
         if (level >= this.level) {
-            let msg = this.loggerOutput.format(this.header, TimeUtils.formatDate(new Date(), this.timeFormate), this.level, args)
+            let msg = this.loggerOutput.format(this.header, TimeUtils.formatDate(new Date(), this.timeFormate), level, args)
             this.loggerOutput.printArgs(msg, ...args)
         }
     }
