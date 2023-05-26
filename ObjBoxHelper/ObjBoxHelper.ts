@@ -27,12 +27,22 @@ export class ObjBoxHelper {
                 let autowirePropertyAnnotations = eachPreCom._annotations_.property.getAnnotationByName<AutowirePropertyAnnotationArgs>(AutowireProperty.name)
                 if (autowirePropertyAnnotations != null) {
                     for (let APAnnotation of autowirePropertyAnnotations) {
-                        if (APAnnotation.annotationArgs.name == component._annotations_.scannedTemplate.componentName) {
-                            result.push({
-                                instance: eachPreCom,
-                                key: APAnnotation.propertyKey,
-                                type: ComponentRefType.Property
-                            })
+                        if(typeof(APAnnotation.annotationArgs.target) == "string"){
+                            if (APAnnotation.annotationArgs.target == component._annotations_.scannedTemplate.componentName) {
+                                result.push({
+                                    instance: eachPreCom,
+                                    key: APAnnotation.propertyKey,
+                                    type: ComponentRefType.Property
+                                })
+                            }
+                        }else{
+                            if (APAnnotation.annotationArgs.target == component._annotations_.scannedTemplate.newInstance) {
+                                result.push({
+                                    instance: eachPreCom,
+                                    key: APAnnotation.propertyKey,
+                                    type: ComponentRefType.Property
+                                })
+                            }
                         }
                     }
                 }
@@ -40,12 +50,22 @@ export class ObjBoxHelper {
                 let autowireMethodAnnotations = eachPreCom._annotations_.methods.getAnnotationsByName<AutowireMethodAnnotationArgs>(AutowireMethod.name)
                 if (autowireMethodAnnotations != null) {
                     for (let AMAnnotation of autowireMethodAnnotations) {
-                        if (AMAnnotation.annotationArgs.name == component._annotations_.scannedTemplate.componentName) {
-                            result.push({
-                                instance: eachPreCom,
-                                key: AMAnnotation.methodName,
-                                type: ComponentRefType.Method
-                            })
+                        if(typeof(AMAnnotation.annotationArgs.target) == "string"){
+                            if (AMAnnotation.annotationArgs.target == component._annotations_.scannedTemplate.componentName) {
+                                result.push({
+                                    instance: eachPreCom,
+                                    key: AMAnnotation.methodName,
+                                    type: ComponentRefType.Method
+                                })
+                            }
+                        }else{
+                            if (AMAnnotation.annotationArgs.target == component._annotations_.scannedTemplate.newInstance) {
+                                result.push({
+                                    instance: eachPreCom,
+                                    key: AMAnnotation.methodName,
+                                    type: ComponentRefType.Method
+                                })
+                            }
                         }
                     }
                 }

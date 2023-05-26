@@ -6,7 +6,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ComponentScanTest = exports.R2 = exports.R1 = exports.Main = exports.MyBeanComponent = exports.B = exports.A = void 0;
+exports.ComponentScanTest = exports.TClass3 = exports.TClass2 = exports.TClass1 = exports.R2 = exports.R1 = exports.Main = exports.MyBeanComponent = exports.B = exports.A = void 0;
 const __1 = require("../..");
 const ComponentScan_annotation_1 = require("../ComponentScanDemo/ComponentScan.annotation");
 // @Component()
@@ -86,6 +86,42 @@ R2 = __decorate([
     (0, __1.Component)("R2")
 ], R2);
 exports.R2 = R2;
+let TClass1 = class TClass1 {
+};
+__decorate([
+    (0, __1.AutowireProperty)("TClass2")
+], TClass1.prototype, "tClass2", void 0);
+__decorate([
+    (0, __1.AutowireProperty)("TClass3")
+], TClass1.prototype, "tClass3", void 0);
+TClass1 = __decorate([
+    (0, __1.Component)()
+], TClass1);
+exports.TClass1 = TClass1;
+let TClass2 = class TClass2 {
+};
+__decorate([
+    (0, __1.AutowireProperty)(TClass1)
+], TClass2.prototype, "tClass1", void 0);
+__decorate([
+    (0, __1.AutowireProperty)("TClass3")
+], TClass2.prototype, "tClass3", void 0);
+TClass2 = __decorate([
+    (0, __1.Component)()
+], TClass2);
+exports.TClass2 = TClass2;
+let TClass3 = class TClass3 {
+};
+__decorate([
+    (0, __1.AutowireProperty)(TClass2)
+], TClass3.prototype, "tClass2", void 0);
+__decorate([
+    (0, __1.AutowireProperty)(TClass1)
+], TClass3.prototype, "tClass1", void 0);
+TClass3 = __decorate([
+    (0, __1.Component)()
+], TClass3);
+exports.TClass3 = TClass3;
 //从外部扫描
 let ComponentScanTest = class ComponentScanTest {
     ready() {

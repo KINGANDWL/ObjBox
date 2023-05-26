@@ -33,11 +33,13 @@ class ObjBox {
          * 组件模板
         */
         this.componentScannedTemplates = {}; //<string,ScannedTemplate>
+        this.componentScannedTemplates_Function = new Map();
         /**
          * bean组件模板
         */
         this.beanComponentTemplates = {}; //<string,ScannedTemplate>
         this.componentTempPool = {};
+        this.componentTempPool_Function = new Map();
         this.status = {
             running: false
         };
@@ -303,6 +305,15 @@ class ObjBox {
         else {
             this.componentScannedTemplates[sTemplate.componentName] = sTemplate;
         }
+        if (sTemplate.newInstance != null) {
+            if (this.componentScannedTemplates_Function.has(sTemplate.newInstance)) {
+                let st = this.componentScannedTemplates_Function.get(sTemplate.newInstance);
+                throw new Error(`Component "${sTemplate.componentName}" is repeat between "${st.filePath}"[${st.newInstance.name}] and "${sTemplate.filePath}"[${sTemplate.newInstance.name}]`);
+            }
+            else {
+                this.componentScannedTemplates_Function.set(sTemplate.newInstance, sTemplate);
+            }
+        }
     }
     /**
      * 获取所有组件模板
@@ -316,10 +327,15 @@ class ObjBox {
     }
     /**
      * 通过名称获取组件模板
-     * @param name
+     * @param target
      */
-    getComponentTemplate(name) {
-        return this.componentScannedTemplates[name];
+    getComponentTemplate(target) {
+        if (typeof (target) == "string") {
+            return this.componentScannedTemplates[target];
+        }
+        else {
+            return this.componentScannedTemplates_Function.get(target);
+        }
     }
     /**
      * 检测模板是否是应用处理器
@@ -567,7 +583,7 @@ class ObjBox {
         let propertyInfos = component._annotations_.property.getAnnotationByName(Annotations_1.AutowireProperty.name);
         if (propertyInfos != null) {
             for (let info of propertyInfos) {
-                let injected = this.getComponent(info.annotationArgs.name);
+                let injected = this.getComponent(info.annotationArgs.target);
                 if (injected != null) {
                     component[info.propertyKey] = injected;
                     if (injected._preComponents_ == null) {
@@ -576,7 +592,8 @@ class ObjBox {
                     injected._preComponents_.push(component);
                 }
                 else if (info.annotationArgs.required == true) {
-                    throw new Error(`Cannot find component "${info.annotationArgs.name}" while injecting dependencies of "${component._annotations_.scannedTemplate.componentName}" by @AutowireProperty`);
+                    let _name = typeof (info.annotationArgs.target) == "string" ? info.annotationArgs.target : info.annotationArgs.target.name;
+                    throw new Error(`Cannot find component "${_name}" while injecting dependencies of "${component._annotations_.scannedTemplate.componentName}" by @AutowireProperty`);
                 }
             }
         }
@@ -584,7 +601,7 @@ class ObjBox {
         let methodInfos = component._annotations_.methods.getAnnotationsByName(Annotations_1.AutowireMethod.name);
         if (methodInfos != null) {
             for (let info of methodInfos) {
-                let injected = this.getComponent(info.annotationArgs.name);
+                let injected = this.getComponent(info.annotationArgs.target);
                 if (injected != null) {
                     if (injected._preComponents_ == null) {
                         injected._preComponents_ = [];
@@ -593,24 +610,37 @@ class ObjBox {
                     component[info.methodName](injected);
                 }
                 else if (info.annotationArgs.required == true) {
-                    throw new Error(`Cannot find component "${info.annotationArgs.name}" while injecting dependencies of "${component._annotations_.scannedTemplate.componentName}" by @AutowireMethod`);
+                    let _name = typeof (info.annotationArgs.target) == "string" ? info.annotationArgs.target : info.annotationArgs.target.name;
+                    throw new Error(`Cannot find component "${_name}" while injecting dependencies of "${component._annotations_.scannedTemplate.componentName}" by @AutowireMethod`);
                 }
             }
         }
     }
-    saveComponentToLevelTwo(name, component) {
-        if (this.componentTempPool[name] == null) {
-            this.componentTempPool[name] = component;
+    saveComponentToLevelTwo(key, clazz, component) {
+        if (this.componentTempPool[key] == null) {
+            this.componentTempPool[key] = component;
         }
         else {
-            throw new Error(`Wrong component "${name}" is in tempPool of level two`);
+            throw new Error(`Wrong component "${key}" is in tempPool of level two`);
+        }
+        if (!this.componentTempPool_Function.has(clazz)) {
+            this.componentTempPool_Function.set(clazz, component);
+        }
+        else {
+            throw new Error(`Wrong component "${clazz.name}" is in tempPool of level two`);
         }
     }
-    getComponentFromTempPool(name) {
-        return this.componentTempPool[name];
+    getComponentFromTempPool(target) {
+        if (typeof (target) == "string") {
+            return this.componentTempPool[target];
+        }
+        else {
+            return this.componentTempPool_Function.get(target);
+        }
     }
-    removeComponentfromTempPool(name) {
-        delete this.componentTempPool[name];
+    removeComponentfromTempPool(key, clazz) {
+        delete this.componentTempPool[key];
+        this.componentTempPool_Function.delete(clazz);
     }
     /**
      * 从模板获取单例模式的实例
@@ -638,25 +668,25 @@ class ObjBox {
     }
     /**
      * 遵循组件创建方式，通过名称获取组件
-     * @param name
+     * @param target
      */
-    getComponent(name) {
+    getComponent(target) {
         /**
          * 13、对所有模板创建第一个实例组件并进行依赖注入
          */
         let component = null;
-        let scannedTemplate = this.getComponentTemplate(name);
+        let scannedTemplate = this.getComponentTemplate(target);
         if (scannedTemplate != null) {
             //   13.1 从模板单例实例化处获取实例，如果没有去缓存取
             component = this.getSingletonInstanceFromTemplate(scannedTemplate);
             if (component == null) {
                 // 13.2 从缓存获取；如果缓存没有，新建
-                component = this.getComponentFromTempPool(name);
+                component = this.getComponentFromTempPool(target);
                 if (component == null) {
                     // 13.3、新建 @Component 组件 ObjBox.createComponentFromTemplate(sTemplate)
                     component = ObjBox.createComponentFromTemplate(scannedTemplate);
                     if (component != null) {
-                        this.saveComponentToLevelTwo(name, component); //实例存入缓存
+                        this.saveComponentToLevelTwo(scannedTemplate.componentName, scannedTemplate.newInstance, component); //实例存入缓存
                         // 13.4、触发 @ComponentHandler 的 beforeCreated(objbox,sTemplate,component)
                         this.executeComponentHandler_beforeCreated(scannedTemplate, component);
                         // 13.5、触发 @TemplateHandler 的 created
@@ -665,7 +695,7 @@ class ObjBox {
                         this.executeComponentHandler_afterCreated(scannedTemplate, component);
                         // 13.7、依赖注入 @Component 组件 objbox.injectComponentDependency(component)
                         this.injectComponentDependency(component); //依赖注入
-                        this.removeComponentfromTempPool(name); //移除缓存中的数据
+                        this.removeComponentfromTempPool(scannedTemplate.componentName, scannedTemplate.newInstance); //移除缓存中的数据
                         // 13.8、触发 @ComponentHandler 的 completed(objbox,sTemplate,component)
                         this.executeComponentHandler_beforeCompleted(scannedTemplate, component);
                         // 13.9、触发 @TemplateHandler 的 completed

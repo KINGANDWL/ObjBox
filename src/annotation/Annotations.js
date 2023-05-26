@@ -253,18 +253,18 @@ function Component(name = null, scope = ComponentCreatedType.Singleton) {
 }
 exports.Component = Component;
 // 属性注入
-function AutowireProperty(name, required = true) {
+function AutowireProperty(target, required = true) {
     let _annotationName = getFunName(2);
-    return function (target, key) {
-        registerProperty(_annotationName, { name: name, required: required }, target, key);
+    return function (_target, key) {
+        registerProperty(_annotationName, { target: target, required: required }, _target, key);
     };
 }
 exports.AutowireProperty = AutowireProperty;
 // 方法注入
-function AutowireMethod(name, required = true) {
+function AutowireMethod(target, required = true) {
     let _annotationName = getFunName(2);
-    return function (target, key, descriptor) {
-        registerMethod(_annotationName, { name: name, required: required }, target, key, descriptor);
+    return function (_target, key, descriptor) {
+        registerMethod(_annotationName, { target: target, required: required }, _target, key, descriptor);
     };
 }
 exports.AutowireMethod = AutowireMethod;

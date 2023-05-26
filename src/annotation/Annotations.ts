@@ -334,26 +334,26 @@ export function Component(name: string = null, scope: ComponentCreatedType = Com
 }
 
 export interface AutowirePropertyAnnotationArgs {
-    name: string
+    target: string | Function
     required: boolean
 }
 // 属性注入
-export function AutowireProperty(name: string, required: boolean = true): PropertyDecorator {
+export function AutowireProperty(target: string | Function, required: boolean = true): PropertyDecorator {
     let _annotationName = getFunName(2)
-    return function (target: any, key: string) {
-        registerProperty<AutowirePropertyAnnotationArgs>(_annotationName, { name: name, required: required }, target, key)
+    return function (_target: any, key: string) {
+        registerProperty<AutowirePropertyAnnotationArgs>(_annotationName, { target: target, required: required }, _target, key)
     }
 }
 
 export interface AutowireMethodAnnotationArgs {
-    name: string
+    target: string | Function
     required: boolean
 }
 // 方法注入
-export function AutowireMethod(name: string, required: boolean = true): MethodDecorator {
+export function AutowireMethod(target: string | Function, required: boolean = true): MethodDecorator {
     let _annotationName = getFunName(2)
-    return function (target: any, key: string, descriptor: PropertyDescriptor) {
-        registerMethod<AutowireMethodAnnotationArgs>(_annotationName, { name: name, required: required }, target, key, descriptor)
+    return function (_target: any, key: string, descriptor: PropertyDescriptor) {
+        registerMethod<AutowireMethodAnnotationArgs>(_annotationName, { target: target, required: required }, _target, key, descriptor)
     }
 }
 

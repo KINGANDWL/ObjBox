@@ -68,6 +68,31 @@ export class R2{
 }
 
 
+@Component()
+export class TClass1{
+    @AutowireProperty("TClass2")
+    tClass2:TClass2
+    @AutowireProperty("TClass3")
+    tClass3:TClass3
+}
+
+@Component()
+export class TClass2{
+    @AutowireProperty(TClass1)
+    tClass1:TClass1
+    @AutowireProperty("TClass3")
+    tClass3:TClass3
+}
+
+@Component()
+export class TClass3{
+    @AutowireProperty(TClass2)
+    tClass2:TClass2
+    @AutowireProperty(TClass1)
+    tClass1:TClass1
+}
+
+
 //从外部扫描
 @ComponentScan(__dirname+"/../extra")
 @Component()
