@@ -1,6 +1,6 @@
 import { ComponentInterface } from '../src/interface/base/Component.interface';
 import { AutowireProperty, AutowirePropertyAnnotationArgs, AutowireMethodAnnotationArgs, AutowireMethod, ComponentOriginalType, MethodAnnotationType, PropertyAnnotationType, getFunName, MethodArgumentsAnnotationType } from '../src/annotation/Annotations';
-import { ScannedTemplate } from '../src/interface/base/ScannedTemplate.interface';
+import { Constructor, ScannedTemplate } from '../src/interface/base/ScannedTemplate.interface';
 import { ObjBoxInterface } from '../src/interface/ObjBox.interface';
 import { ObjBox } from '../src/ObjBox';
 import { LoggerManagerConfig } from '../libs';
@@ -27,7 +27,7 @@ export class ObjBoxHelper {
                 let autowirePropertyAnnotations = eachPreCom._annotations_.property.getAnnotationByName<AutowirePropertyAnnotationArgs>(AutowireProperty.name)
                 if (autowirePropertyAnnotations != null) {
                     for (let APAnnotation of autowirePropertyAnnotations) {
-                        if(typeof(APAnnotation.annotationArgs.target) == "string"){
+                        if (typeof (APAnnotation.annotationArgs.target) == "string") {
                             if (APAnnotation.annotationArgs.target == component._annotations_.scannedTemplate.componentName) {
                                 result.push({
                                     instance: eachPreCom,
@@ -35,7 +35,7 @@ export class ObjBoxHelper {
                                     type: ComponentRefType.Property
                                 })
                             }
-                        }else{
+                        } else {
                             if (APAnnotation.annotationArgs.target == component._annotations_.scannedTemplate.newInstance) {
                                 result.push({
                                     instance: eachPreCom,
@@ -50,7 +50,7 @@ export class ObjBoxHelper {
                 let autowireMethodAnnotations = eachPreCom._annotations_.methods.getAnnotationsByName<AutowireMethodAnnotationArgs>(AutowireMethod.name)
                 if (autowireMethodAnnotations != null) {
                     for (let AMAnnotation of autowireMethodAnnotations) {
-                        if(typeof(AMAnnotation.annotationArgs.target) == "string"){
+                        if (typeof (AMAnnotation.annotationArgs.target) == "string") {
                             if (AMAnnotation.annotationArgs.target == component._annotations_.scannedTemplate.componentName) {
                                 result.push({
                                     instance: eachPreCom,
@@ -58,7 +58,7 @@ export class ObjBoxHelper {
                                     type: ComponentRefType.Method
                                 })
                             }
-                        }else{
+                        } else {
                             if (AMAnnotation.annotationArgs.target == component._annotations_.scannedTemplate.newInstance) {
                                 result.push({
                                     instance: eachPreCom,
@@ -131,6 +131,23 @@ export class ObjBoxHelper {
         }
         return false
     }
+
+    /**
+     * 判断组件是否有注解
+     * @param name 
+     * @param component 
+     * @return true存在
+     */
+    public static doesClassHaveClassAnnotation(annotationName: string, clazz: Function): boolean {
+        let _clazz = clazz as Constructor
+        if (annotationName != null && clazz != null && _clazz.prototype != null && _clazz.prototype._annotations_ != null) {
+            let _annotations_ = _clazz.prototype._annotations_;
+            return _annotations_.clazz.getAnnotation(annotationName) != null
+        }
+        return false
+    }
+
+
     /**
      * 获取组件的class注解参数（元数据）
      * @param annotationName 注解名称 
@@ -140,7 +157,7 @@ export class ObjBoxHelper {
         if (this.isObjectTypeofComponent(component)) {
             let _component = component as ComponentInterface
             let anno = _component._annotations_.clazz.getAnnotation<T>(annotationName)
-            if(anno != null){
+            if (anno != null) {
                 return anno.annotationArgs
             }
         }
@@ -194,16 +211,18 @@ export class ObjBoxHelper {
 
 
 
+
+
     /**
-     * 获取模板所存储的class注解参数（元数据）
-     * @param annotationName 注解名称 
-     * @param component 组件对象
-     */
+    * 获取模板所存储的class注解参数（元数据）
+    * @param annotationName 注解名称 
+    * @param component 组件对象
+    */
     public static getClassAnnotationFromTemplate<T = any>(annotationName: string, template: ScannedTemplate): T {
         if (template != null) {
             let prot = template.newInstance.prototype
             let anno = prot._annotations_.clazz.getAnnotation<T>(annotationName)
-            if(anno != null){
+            if (anno != null) {
                 return anno.annotationArgs
             }
         }
@@ -239,6 +258,7 @@ export class ObjBoxHelper {
         }
         return []
     }
+
     /**
      * 获取模板所存储的函数参数注解（元数据）
      * @param annotationName 注解名称 
@@ -248,6 +268,78 @@ export class ObjBoxHelper {
         if (template != null) {
             let prot = template.newInstance.prototype
             let maats: MethodArgumentsAnnotationType<T>[] = prot._annotations_.methodArguments.getAnnotationByName<T>(annotationName)
+            if (maats != null) {
+                return maats
+            }
+        }
+        return []
+    }
+
+
+
+
+
+
+    /**
+     * 获取模板所存储的class注解参数（元数据）
+     * @param annotationName 注解名称 
+     * @param component 组件对象
+     */
+    public static getClassAnnotationFromClass<T = any>(annotationName: string, clazz: Function): T {
+        let _clazz = clazz as Constructor
+        if (annotationName != null && clazz != null && _clazz.prototype != null && _clazz.prototype._annotations_ != null) {
+            let _annotations_ = _clazz.prototype._annotations_;
+            let classAnno = _annotations_.clazz.getAnnotation<T>(annotationName);
+            if(classAnno != null){
+                return classAnno.annotationArgs
+            }
+        }
+        return null
+    }
+    /**
+     * 获取模板所存储的method注解（元数据）
+     * @param annotationName 注解名称 
+     * @param component 组件对象
+     */
+    public static getMethodsAnnotationFromClass<T = any>(annotationName: string, clazz: Function): MethodAnnotationType<T>[] {
+        let _clazz = clazz as Constructor
+        if (annotationName != null && clazz != null && _clazz.prototype != null && _clazz.prototype._annotations_ != null) {
+            let _annotations_ = _clazz.prototype._annotations_;
+            let mats: MethodAnnotationType<T>[] = _annotations_.methods.getAnnotationsByName<T>(annotationName)
+            if (mats != null) {
+                return mats
+            }
+        }
+        return []
+    }
+    /**
+     * 获取模板所存储的property注解（元数据）
+     * @param annotationName 注解名称 
+     * @param component 组件对象
+     */
+    public static getPropertyAnnotationFromClass<T = any>(annotationName: string, clazz: Function): PropertyAnnotationType<T>[] {
+        let _clazz = clazz as Constructor
+        if (annotationName != null && clazz != null && _clazz.prototype != null && _clazz.prototype._annotations_ != null) {
+            let _annotations_ = _clazz.prototype._annotations_;
+            
+            let pats: PropertyAnnotationType<T>[] = _annotations_.property.getAnnotationByName<T>(annotationName)
+            if (pats != null) {
+                return pats
+            }
+        }
+        return []
+    }
+
+    /**
+     * 获取模板所存储的函数参数注解（元数据）
+     * @param annotationName 注解名称 
+     * @param component 组件对象
+     */
+    public static getMethodArgsAnnotationFromClass<T = any>(annotationName: string, clazz: Function): MethodArgumentsAnnotationType<T>[] {
+        let _clazz = clazz as Constructor
+        if (annotationName != null && clazz != null && _clazz.prototype != null && _clazz.prototype._annotations_ != null) {
+            let _annotations_ = _clazz.prototype._annotations_;
+            let maats: MethodArgumentsAnnotationType<T>[] = _annotations_.methodArguments.getAnnotationByName<T>(annotationName)
             if (maats != null) {
                 return maats
             }

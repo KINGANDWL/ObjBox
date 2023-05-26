@@ -115,6 +115,20 @@ class ObjBoxHelper {
         return false;
     }
     /**
+     * 判断组件是否有注解
+     * @param name
+     * @param component
+     * @return true存在
+     */
+    static doesClassHaveClassAnnotation(annotationName, clazz) {
+        let _clazz = clazz;
+        if (annotationName != null && clazz != null && _clazz.prototype != null && _clazz.prototype._annotations_ != null) {
+            let _annotations_ = _clazz.prototype._annotations_;
+            return _annotations_.clazz.getAnnotation(annotationName) != null;
+        }
+        return false;
+    }
+    /**
      * 获取组件的class注解参数（元数据）
      * @param annotationName 注解名称
      * @param component 组件对象
@@ -175,10 +189,10 @@ class ObjBoxHelper {
         return [];
     }
     /**
-     * 获取模板所存储的class注解参数（元数据）
-     * @param annotationName 注解名称
-     * @param component 组件对象
-     */
+    * 获取模板所存储的class注解参数（元数据）
+    * @param annotationName 注解名称
+    * @param component 组件对象
+    */
     static getClassAnnotationFromTemplate(annotationName, template) {
         if (template != null) {
             let prot = template.newInstance.prototype;
@@ -228,6 +242,70 @@ class ObjBoxHelper {
         if (template != null) {
             let prot = template.newInstance.prototype;
             let maats = prot._annotations_.methodArguments.getAnnotationByName(annotationName);
+            if (maats != null) {
+                return maats;
+            }
+        }
+        return [];
+    }
+    /**
+     * 获取模板所存储的class注解参数（元数据）
+     * @param annotationName 注解名称
+     * @param component 组件对象
+     */
+    static getClassAnnotationFromClass(annotationName, clazz) {
+        let _clazz = clazz;
+        if (annotationName != null && clazz != null && _clazz.prototype != null && _clazz.prototype._annotations_ != null) {
+            let _annotations_ = _clazz.prototype._annotations_;
+            let classAnno = _annotations_.clazz.getAnnotation(annotationName);
+            if (classAnno != null) {
+                return classAnno.annotationArgs;
+            }
+        }
+        return null;
+    }
+    /**
+     * 获取模板所存储的method注解（元数据）
+     * @param annotationName 注解名称
+     * @param component 组件对象
+     */
+    static getMethodsAnnotationFromClass(annotationName, clazz) {
+        let _clazz = clazz;
+        if (annotationName != null && clazz != null && _clazz.prototype != null && _clazz.prototype._annotations_ != null) {
+            let _annotations_ = _clazz.prototype._annotations_;
+            let mats = _annotations_.methods.getAnnotationsByName(annotationName);
+            if (mats != null) {
+                return mats;
+            }
+        }
+        return [];
+    }
+    /**
+     * 获取模板所存储的property注解（元数据）
+     * @param annotationName 注解名称
+     * @param component 组件对象
+     */
+    static getPropertyAnnotationFromClass(annotationName, clazz) {
+        let _clazz = clazz;
+        if (annotationName != null && clazz != null && _clazz.prototype != null && _clazz.prototype._annotations_ != null) {
+            let _annotations_ = _clazz.prototype._annotations_;
+            let pats = _annotations_.property.getAnnotationByName(annotationName);
+            if (pats != null) {
+                return pats;
+            }
+        }
+        return [];
+    }
+    /**
+     * 获取模板所存储的函数参数注解（元数据）
+     * @param annotationName 注解名称
+     * @param component 组件对象
+     */
+    static getMethodArgsAnnotationFromClass(annotationName, clazz) {
+        let _clazz = clazz;
+        if (annotationName != null && clazz != null && _clazz.prototype != null && _clazz.prototype._annotations_ != null) {
+            let _annotations_ = _clazz.prototype._annotations_;
+            let maats = _annotations_.methodArguments.getAnnotationByName(annotationName);
             if (maats != null) {
                 return maats;
             }
