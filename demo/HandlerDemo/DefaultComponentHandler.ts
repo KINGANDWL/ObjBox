@@ -10,6 +10,7 @@ export class DefaultComponentHandler implements ComponentHandlerInterface {
         }
 
         let path = template.filePath;
+        path = path.replace(/[\\\/]+/g,"/")
         let index = path.search(/([a-zA-Z0-9_\-. ]+(\\|\/)+){2}[a-zA-Z0-9_\-. ]+.js/)
         if (index >= 0) {
             path = path.slice(index)
@@ -17,14 +18,23 @@ export class DefaultComponentHandler implements ComponentHandlerInterface {
         this.logger.info(`scanned: [${template.componentName}] ${path}`)
 
     }
-    created(objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface) {
-        this.logger.info(`created: [${template.componentName}]`)
+    beforeCreated(objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface) {
+        this.logger.info(`beforeCreated: [${template.componentName}]`)
     }
-    completed(objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface) {
-        this.logger.info(`completed: [${template.componentName}]`)
+    afterCreated(objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface) {
+        this.logger.info(`afterCreated: [${template.componentName}]`)
     }
-    ready(objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface) {
-        this.logger.info(`ready: [${template.componentName}]`)
+    beforeCompleted(objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface) {
+        this.logger.info(`beforeCompleted: [${template.componentName}]`)
+    }
+    afterCompleted(objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface) {
+        this.logger.info(`afterCompleted: [${template.componentName}]`)
+    }
+    beforeReady(objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface) {
+        this.logger.info(`beforeReady: [${template.componentName}]`)
+    }
+    afterReady(objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface) {
+        this.logger.info(`afterReady: [${template.componentName}]`)
     }
 
 }

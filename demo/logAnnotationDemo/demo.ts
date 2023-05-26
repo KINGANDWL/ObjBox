@@ -22,7 +22,7 @@ export function Log(): MethodDecorator {
 @ComponentHandler()
 class LogHandler implements ComponentHandlerInterface{
     scanned: (objbox: ObjBoxInterface, template: ScannedTemplate) => void;
-    created(objbox: ObjBoxInterface, template: ScannedTemplate, component: any){
+    beforeCreated(objbox: ObjBoxInterface, template: ScannedTemplate, component: any){
         let methodAnnos = ObjBoxHelper.getMethodsAnnotationFromComponent(Log.name,component)
         for(let methodAnno of methodAnnos){
             ObjBoxHelper.insertFunctionBeforeMethod(component,methodAnno.methodName,(...args)=>{
@@ -35,8 +35,6 @@ class LogHandler implements ComponentHandlerInterface{
             })
         }
     }
-    completed?: (objbox: ObjBoxInterface, template: ScannedTemplate, component: any) => void;
-    ready?: (objbox: ObjBoxInterface, template: ScannedTemplate, component: any) => void;
 }
 
 

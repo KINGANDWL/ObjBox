@@ -448,27 +448,51 @@ export class ObjBox implements ObjBoxInterface {
             }
         }
     }
-    private executeComponentHandler_created(sTemplate: ScannedTemplate, component: ComponentInterface) {
+    private executeComponentHandler_beforeCreated(sTemplate: ScannedTemplate, component: ComponentInterface) {
         let allCH = this.getAllComponentHandler();
         for (let ch of allCH) {
-            if (ch.created != null) {
-                ch.created(this, sTemplate, component);
+            if (ch.beforeCreated != null) {
+                ch.beforeCreated(this, sTemplate, component);
             }
         }
     }
-    private executeComponentHandler_completed(sTemplate: ScannedTemplate, component: ComponentInterface) {
+    private executeComponentHandler_afterCreated(sTemplate: ScannedTemplate, component: ComponentInterface) {
         let allCH = this.getAllComponentHandler();
         for (let ch of allCH) {
-            if (ch.completed != null) {
-                ch.completed(this, sTemplate, component);
+            if (ch.afterCreated != null) {
+                ch.afterCreated(this, sTemplate, component);
             }
         }
     }
-    private executeComponentHandler_ready(sTemplate: ScannedTemplate, component: ComponentInterface) {
+    private executeComponentHandler_beforeCompleted(sTemplate: ScannedTemplate, component: ComponentInterface) {
         let allCH = this.getAllComponentHandler();
         for (let ch of allCH) {
-            if (ch.ready != null) {
-                ch.ready(this, sTemplate, component);
+            if (ch.beforeCompleted != null) {
+                ch.beforeCompleted(this, sTemplate, component);
+            }
+        }
+    }
+    private executeComponentHandler_afterCompleted(sTemplate: ScannedTemplate, component: ComponentInterface) {
+        let allCH = this.getAllComponentHandler();
+        for (let ch of allCH) {
+            if (ch.afterCompleted != null) {
+                ch.afterCompleted(this, sTemplate, component);
+            }
+        }
+    }
+    private executeComponentHandler_beforeReady(sTemplate: ScannedTemplate, component: ComponentInterface) {
+        let allCH = this.getAllComponentHandler();
+        for (let ch of allCH) {
+            if (ch.beforeReady != null) {
+                ch.beforeReady(this, sTemplate, component);
+            }
+        }
+    }
+    private executeComponentHandler_afterReady(sTemplate: ScannedTemplate, component: ComponentInterface) {
+        let allCH = this.getAllComponentHandler();
+        for (let ch of allCH) {
+            if (ch.afterReady != null) {
+                ch.afterReady(this, sTemplate, component);
             }
         }
     }
@@ -646,14 +670,8 @@ export class ObjBox implements ObjBoxInterface {
      */
     getComponent<T = ComponentInterface>(name: string): T | null {
         /**
-          13.1 从模板单例实例化处获取实例，如果没有去缓存取
-          13.2 如果缓存没有，新建
-          13.3、触发 @ComponentHandler 的 created(objbox,sTemplate,component)
-          13.4、触发 @TemplateHandler 的 created
-          13.5、触发 @ComponentHandler 的 completed(objbox,sTemplate,component)
-          13.6、触发 @TemplateHandler 的 completed
-          13.7、如果应用已经运行，触发 @TemplateHandler 的 ready
-        */
+         * 13、对所有模板创建第一个实例组件并进行依赖注入
+         */
 
         let component = null
         let scannedTemplate = this.getComponentTemplate(name)
@@ -666,29 +684,37 @@ export class ObjBox implements ObjBoxInterface {
                 // 13.2 从缓存获取；如果缓存没有，新建
                 component = this.getComponentFromTempPool(name);
                 if (component == null) {
-
+                    // 13.3、新建 @Component 组件 ObjBox.createComponentFromTemplate(sTemplate)
                     component = ObjBox.createComponentFromTemplate(scannedTemplate)
                     if (component != null) {
                         this.saveComponentToLevelTwo(name, component) //实例存入缓存
 
-                        // 13.3、触发 @ComponentHandler 的 created(objbox,sTemplate,component)
-                        this.executeComponentHandler_created(scannedTemplate, component);
-
-                        // 13.4、触发 @TemplateHandler 的 created
+                        // 13.4、触发 @ComponentHandler 的 beforeCreated(objbox,sTemplate,component)
+                        this.executeComponentHandler_beforeCreated(scannedTemplate, component);
+                        // 13.5、触发 @TemplateHandler 的 created
                         this.executeTemplateHandler_created(component);
+                        // 13.6、触发 @ComponentHandler 的 afterCreated(objbox,sTemplate,component)
+                        this.executeComponentHandler_afterCreated(scannedTemplate, component);
 
+                        // 13.7、依赖注入 @Component 组件 objbox.injectComponentDependency(component)
                         this.injectComponentDependency(component);//依赖注入
-
                         this.removeComponentfromTempPool(name); //移除缓存中的数据
 
-                        // 13.5、触发 @ComponentHandler 的 completed(objbox,sTemplate,component)
-                        this.executeComponentHandler_completed(scannedTemplate, component);
-                        // 13.6、触发 @TemplateHandler 的 completed
+                        // 13.8、触发 @ComponentHandler 的 completed(objbox,sTemplate,component)
+                        this.executeComponentHandler_beforeCompleted(scannedTemplate, component);
+                        // 13.9、触发 @TemplateHandler 的 completed
                         this.executeTemplateHandler_completed(component);
-
-                        // 13.7、如果应用已经运行，触发 @TemplateHandler 的 ready
+                        // 13.10、触发 @ComponentHandler 的 completed(objbox,sTemplate,component)
+                        this.executeComponentHandler_afterCompleted(scannedTemplate, component);
+                        
+                        // 13.11、如果应用已经运行，触发 @TemplateHandler 的 ready
                         if (this.status.running == true) {
+                            // 13.11.1、触发 @ComponentHandler 的 beforeReady(objbox,sTemplate,component)
+                            this.executeComponentHandler_beforeReady(scannedTemplate, component);
+                            // 13.11.2、触发 @TemplateHandler 的 ready
                             this.executeTemplateHandler_ready(component);
+                            // 13.11.3、触发 @ComponentHandler 的 beforeReady(objbox,sTemplate,component)
+                            this.executeComponentHandler_afterReady(scannedTemplate, component);
                         }
                     }
                 }
@@ -949,13 +975,15 @@ export class ObjBox implements ObjBoxInterface {
             this.status.running = true
             let allComponents = this._getAllComponentsInstance()
             for (let component of allComponents) {
-                // 15.2、触发 @ComponentHandler 的 ready(objbox,sTemplate,component)
-                this.executeComponentHandler_ready(component._annotations_.scannedTemplate, component)
+                // 15.2、触发 @ComponentHandler 的 beforeReady(objbox,sTemplate,component)
+                this.executeComponentHandler_beforeReady(component._annotations_.scannedTemplate, component);
                 // 15.3、触发 @TemplateHandler 的 ready
                 this.executeTemplateHandler_ready(component);
+                // 15.4、触发 @ComponentHandler 的 beforeReady(objbox,sTemplate,component)
+                this.executeComponentHandler_afterReady(component._annotations_.scannedTemplate, component);
             }
 
-            // 15.4、触发 @ApplicationHandler 的 afterRunning(objbox)
+            // 15.5、触发 @ApplicationHandler 的 afterRunning(objbox)
             this.executeApplicationHandler_afterRunning()
         }
     }
@@ -1032,22 +1060,30 @@ export class ObjBox implements ObjBoxInterface {
     ===== 装载后期 =====
     12、触发应用处理器 @ApplicationHandler 的 processBeforePrepare(objbox)
     13、对所有模板创建第一个实例组件并进行依赖注入
-          13.1 从模板单例实例化处获取实例，如果没有去缓存取
-          13.2 如果缓存没有，新建
-          13.3、触发 @ComponentHandler 的 created(objbox,sTemplate,component)
-          13.4、触发 @TemplateHandler 的 created
-          13.5、触发 @ComponentHandler 的 completed(objbox,sTemplate,component)
-          13.6、触发 @TemplateHandler 的 completed
-          13.7、如果应用已经运行，触发 @TemplateHandler 的 ready
+          13.1、从模板单例实例化处获取实例，如果没有去缓存取
+          13.2、如果缓存没有，新建
+            13.3、新建 @Component 组件 ObjBox.createComponentFromTemplate(sTemplate)
+            13.4、触发 @ComponentHandler 的 beforeCreated(objbox,sTemplate,component)
+            13.5、触发 @TemplateHandler 的 created
+            13.6、触发 @ComponentHandler 的 afterCreated(objbox,sTemplate,component)
+            13.7、依赖注入 @Component 组件 objbox.injectComponentDependency(component)
+            13.8、触发 @ComponentHandler 的 beforeCompleted(objbox,sTemplate,component)
+            13.9、触发 @TemplateHandler 的 completed
+            13.10、触发 @ComponentHandler 的 afterCompleted(objbox,sTemplate,component)
+            13.11、如果应用已经运行
+                13.11.1、触发 @ComponentHandler 的 beforeReady
+                13.11.2、触发 @TemplateHandler 的 ready
+                13.11.3、触发 @ComponentHandler 的 afterReady
     14、触发应用处理器 @ApplicationHandler 的 processAfterPrepare(objbox)
     
 ================== 运行阶段 ==================
 说明：容器正式启动，触发所有组件的ready接口
     15、run启动程序
         15.1、触发 @ApplicationHandler 的 beforeRunning(objbox)
-        15.2、触发 @ComponentHandler 的 ready(objbox,sTemplate,component)
+        15.2、触发 @ComponentHandler 的 beforeReady(objbox,sTemplate,component)
         15.3、触发 @TemplateHandler 的 ready
-        15.4、触发 @ApplicationHandler 的 afterRunning(objbox)
+        15.4、触发 @ComponentHandler 的 afterReady(objbox,sTemplate,component)
+        15.5、触发 @ApplicationHandler 的 afterRunning(objbox)
 */
 
 

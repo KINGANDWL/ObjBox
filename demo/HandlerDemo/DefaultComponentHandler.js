@@ -18,20 +18,30 @@ let DefaultComponentHandler = DefaultComponentHandler_1 = class DefaultComponent
             this.logger = objbox.getLoggerManager().getLogger(DefaultComponentHandler_1);
         }
         let path = template.filePath;
+        path = path.replace(/[\\\/]+/g, "/");
         let index = path.search(/([a-zA-Z0-9_\-. ]+(\\|\/)+){2}[a-zA-Z0-9_\-. ]+.js/);
         if (index >= 0) {
             path = path.slice(index);
         }
         this.logger.info(`scanned: [${template.componentName}] ${path}`);
     }
-    created(objbox, template, component) {
-        this.logger.info(`created: [${template.componentName}]`);
+    beforeCreated(objbox, template, component) {
+        this.logger.info(`beforeCreated: [${template.componentName}]`);
     }
-    completed(objbox, template, component) {
-        this.logger.info(`completed: [${template.componentName}]`);
+    afterCreated(objbox, template, component) {
+        this.logger.info(`afterCreated: [${template.componentName}]`);
     }
-    ready(objbox, template, component) {
-        this.logger.info(`ready: [${template.componentName}]`);
+    beforeCompleted(objbox, template, component) {
+        this.logger.info(`beforeCompleted: [${template.componentName}]`);
+    }
+    afterCompleted(objbox, template, component) {
+        this.logger.info(`afterCompleted: [${template.componentName}]`);
+    }
+    beforeReady(objbox, template, component) {
+        this.logger.info(`beforeReady: [${template.componentName}]`);
+    }
+    afterReady(objbox, template, component) {
+        this.logger.info(`afterReady: [${template.componentName}]`);
     }
 };
 DefaultComponentHandler = DefaultComponentHandler_1 = __decorate([

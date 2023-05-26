@@ -14,18 +14,33 @@ export interface ComponentHandlerInterface {
      */
     scanned: (objbox: ObjBoxInterface, template: ScannedTemplate) => void
     /**
-     * 模板被创建为组件，但是未进行初始化与依赖注入
+     * 模板被创建为组件，但是并未触发template的create
      * @return false:放弃创建结果。true:保留创建结果
-     */
-    created?: (objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface | any) => void
+    */
+    beforeCreated?: (objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface | any) => void
     /**
-     * 模板创建创建组件完成
+     * 模板被创建为组件，且已经触发template的create
      * @return false:放弃创建结果。true:保留创建结果
      */
-    completed?: (objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface | any) => void
+    afterCreated?: (objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface | any) => void
     /**
-     * 模板创建创建组件完成，等待使用
+     * 模板创建创建组件完成，但并未触发template的completed
      * @return false:放弃创建结果。true:保留创建结果
      */
-    ready?: (objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface | any) => void
+    beforeCompleted?: (objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface | any) => void
+    /**
+     * 模板创建创建组件完成，且触发template的completed
+     * @return false:放弃创建结果。true:保留创建结果
+     */
+    afterCompleted?: (objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface | any) => void
+    /**
+     * 模板创建创建组件完成，但在template的ready之前
+     * @return false:放弃创建结果。true:保留创建结果
+     */
+    beforeReady?: (objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface | any) => void
+    /**
+     * 模板创建创建组件完成，且template的ready刚好执行完成
+     * @return false:放弃创建结果。true:保留创建结果
+     */
+    afterReady?: (objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface | any) => void
 }
