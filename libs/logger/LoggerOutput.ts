@@ -4,7 +4,7 @@ import { Level } from "./Level";
 export interface LoggerOutput {
     printArgs: (...args: any[]) => void
     print: (msg: any) => void
-    format: (header: string, timestamp: string, level: Level, msg: string | any[]) => string
+    format: (header: string, timestamp: string, level: Level, msg?: string) => string
 }
 
 
@@ -16,7 +16,7 @@ export class DefaultOutput implements LoggerOutput {
     print(msg: any) {
         console.log(msg)
     }
-    format(header: string, timestamp: string, level: Level, msg: string | any[]) {
+    format(header: string, timestamp: string, level: Level, msg?: string) {
         let levelMsg = ""
         switch (level) {
             case Level.ALL: {
@@ -47,7 +47,7 @@ export class DefaultOutput implements LoggerOutput {
                 levelMsg = "Unknown";
             }
         }
-        // 2020-11-12
-        return `${timestamp} [${levelMsg.padEnd(5, " ")}] ${header}: ${msg.toString()}`;
+
+        return `${timestamp} [${levelMsg.padEnd(5, " ")}] ${header}: ${msg != null ? msg : ""}`;
     }
 }

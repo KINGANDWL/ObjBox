@@ -57,8 +57,7 @@ class DefaultOutput {
                 levelMsg = "Unknown";
             }
         }
-        // 2020-11-12
-        return `${timestamp} [${levelMsg.padEnd(5, " ")}] ${header}: ${msg.toString()}`;
+        return `${timestamp} [${levelMsg.padEnd(5, " ")}] ${header}: ${msg != null ? msg : ""}`;
     }
 }
 exports.DefaultOutput = DefaultOutput;
