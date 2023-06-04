@@ -854,6 +854,14 @@ class ObjBox {
                 componentAnno.annotationArgs.scope = scope;
                 componentAnno.annotationArgs.name = name;
             }
+            else {
+                con.prototype._annotations_ = new Annotations_1.Annotations();
+                con.prototype._preComponents_ = [];
+                con.prototype._annotations_.clazz.pushAnnotation(Annotations_1.Component.name, {
+                    name: name,
+                    scope: scope
+                });
+            }
         }
         this.registerClass(con, "#registerFromClass");
     }

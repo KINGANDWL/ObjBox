@@ -3,7 +3,7 @@ import { DefaultManagerConfig, LoggerManagerConfig } from "../libs/logger/Logger
 import { LoggerManager } from "../libs/logger/LoggerManager";
 import { Constructor, ScannedTemplate, BeanMethod } from './interface/base/ScannedTemplate.interface';
 import { ComponentInterface } from './interface/base/Component.interface';
-import { Component as ComponentAnnotation, ApplicationHandler, ComponentHandler, ComponentAnnotationArgs, BeanComponent, Bean, BeanAnnotationArgs, AutowirePropertyAnnotationArgs, AutowireProperty, AutowireMethod, AutowireMethodAnnotationArgs, Annotations, Component, ComponentCreatedType } from './annotation/Annotations';
+import { Component as ComponentAnnotation, ApplicationHandler, ComponentHandler, ComponentAnnotationArgs, BeanComponent, Bean, BeanAnnotationArgs, AutowirePropertyAnnotationArgs, AutowireProperty, AutowireMethod, AutowireMethodAnnotationArgs, Annotations, Component, ComponentCreatedType, BeanComponentAnnotationArgs, ApplicationHandlerAnnotationArgs } from './annotation/Annotations';
 import { ComponentOriginalType } from "./annotation/Annotations";
 import { ApplicationHandlerInterface } from "./interface/ApplicationHandler.interface";
 import { ComponentHandlerInterface } from "./interface/ComponentHandler.interface";
@@ -880,6 +880,13 @@ export class ObjBox implements ObjBoxInterface {
             if( componentAnno!= null){
                 componentAnno.annotationArgs.scope = scope
                 componentAnno.annotationArgs.name = name
+            }else{
+                con.prototype._annotations_ = new Annotations()
+                con.prototype._preComponents_ = []
+                con.prototype._annotations_.clazz.pushAnnotation<ComponentAnnotationArgs>(Component.name, {
+                    name: name,
+                    scope: scope
+                })
             }
         }
 
