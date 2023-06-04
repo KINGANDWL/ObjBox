@@ -1,6 +1,6 @@
 {
 	"name": "objbox",
-	"version": "1.5.6",
+	"version": "1.5.7",
 	"description": "基于typescript装饰器的轻量级IOC容器",
 	"main": "index.js",
 	"directories": {

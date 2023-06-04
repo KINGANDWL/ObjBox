@@ -3,7 +3,7 @@ import { DefaultManagerConfig, LoggerManagerConfig } from "../libs/logger/Logger
 import { LoggerManager } from "../libs/logger/LoggerManager";
 import { Constructor, ScannedTemplate, BeanMethod } from './interface/base/ScannedTemplate.interface';
 import { ComponentInterface } from './interface/base/Component.interface';
-import { Component as ComponentAnnotation, ApplicationHandler, ComponentHandler, ComponentAnnotationArgs, BeanComponent, Bean, BeanAnnotationArgs, AutowirePropertyAnnotationArgs, AutowireProperty, AutowireMethod, AutowireMethodAnnotationArgs, Annotations, Component, ComponentCreatedType, BeanComponentAnnotationArgs, ApplicationHandlerAnnotationArgs } from './annotation/Annotations';
+import { Component as ComponentAnnotation, ApplicationHandler, ComponentHandler, ComponentAnnotationArgs, BeanComponent, Bean, BeanAnnotationArgs, AutowirePropertyAnnotationArgs, AutowireProperty, AutowireMethod, AutowireMethodAnnotationArgs, Annotations, Component, ComponentCreatedType, BeanComponentAnnotationArgs, ApplicationHandlerAnnotationArgs, ComponentHandlerAnnotationArgs } from './annotation/Annotations';
 import { ComponentOriginalType } from "./annotation/Annotations";
 import { ApplicationHandlerInterface } from "./interface/ApplicationHandler.interface";
 import { ComponentHandlerInterface } from "./interface/ComponentHandler.interface";
@@ -864,7 +864,11 @@ export class ObjBox implements ObjBoxInterface {
      */
     registerFromClass(clazz: Function, name?: string, scope?: ComponentCreatedType) {
         let con = clazz as Constructor
-        if (name == null) name = con.name
+        let nameIsNull = false
+        if (name == null) {
+            nameIsNull = true
+            name = con.name
+        }
         if (scope == null) scope = ComponentCreatedType.Singleton
 
         // 普通的未处理的class
@@ -879,12 +883,26 @@ export class ObjBox implements ObjBoxInterface {
             let componentAnno = con.prototype._annotations_.clazz.getAnnotation<ComponentAnnotationArgs>(Component.name)
             if( componentAnno!= null){
                 componentAnno.annotationArgs.scope = scope
-                componentAnno.annotationArgs.name = name
+                if(!nameIsNull) componentAnno.annotationArgs.name = name
             }else{
                 con.prototype._annotations_.clazz.pushAnnotation<ComponentAnnotationArgs>(Component.name, {
                     name: name,
                     scope: scope
                 })
+                if(!nameIsNull) {
+                    let componentAnno = con.prototype._annotations_.clazz.getAnnotation<ApplicationHandlerAnnotationArgs>(ApplicationHandler.name)
+                    if( componentAnno!= null){
+                        componentAnno.annotationArgs.name = name
+                    }
+                    let componentAnno2 = con.prototype._annotations_.clazz.getAnnotation<ComponentHandlerAnnotationArgs>(ComponentHandler.name)
+                    if( componentAnno2!= null){
+                        componentAnno2.annotationArgs.name = name
+                    }
+                    let componentAnno3 = con.prototype._annotations_.clazz.getAnnotation<BeanComponentAnnotationArgs>(BeanComponent.name)
+                    if( componentAnno3!= null){
+                        componentAnno3.annotationArgs.name = name
+                    }
+                }
             }
         }
 

@@ -835,8 +835,11 @@ class ObjBox {
      */
     registerFromClass(clazz, name, scope) {
         let con = clazz;
-        if (name == null)
+        let nameIsNull = false;
+        if (name == null) {
+            nameIsNull = true;
             name = con.name;
+        }
         if (scope == null)
             scope = Annotations_1.ComponentCreatedType.Singleton;
         // 普通的未处理的class
@@ -852,13 +855,28 @@ class ObjBox {
             let componentAnno = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.Component.name);
             if (componentAnno != null) {
                 componentAnno.annotationArgs.scope = scope;
-                componentAnno.annotationArgs.name = name;
+                if (!nameIsNull)
+                    componentAnno.annotationArgs.name = name;
             }
             else {
                 con.prototype._annotations_.clazz.pushAnnotation(Annotations_1.Component.name, {
                     name: name,
                     scope: scope
                 });
+                if (!nameIsNull) {
+                    let componentAnno = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.ApplicationHandler.name);
+                    if (componentAnno != null) {
+                        componentAnno.annotationArgs.name = name;
+                    }
+                    let componentAnno2 = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.ComponentHandler.name);
+                    if (componentAnno2 != null) {
+                        componentAnno2.annotationArgs.name = name;
+                    }
+                    let componentAnno3 = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.BeanComponent.name);
+                    if (componentAnno3 != null) {
+                        componentAnno3.annotationArgs.name = name;
+                    }
+                }
             }
         }
         this.registerClass(con, "#registerFromClass");
