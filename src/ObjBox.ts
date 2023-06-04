@@ -881,8 +881,6 @@ export class ObjBox implements ObjBoxInterface {
                 componentAnno.annotationArgs.scope = scope
                 componentAnno.annotationArgs.name = name
             }else{
-                con.prototype._annotations_ = new Annotations()
-                con.prototype._preComponents_ = []
                 con.prototype._annotations_.clazz.pushAnnotation<ComponentAnnotationArgs>(Component.name, {
                     name: name,
                     scope: scope
