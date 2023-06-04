@@ -420,22 +420,13 @@ class ObjBox {
                 else {
                     sTemplate.instances.push(result);
                 }
-                if (result._annotations_ == null) {
-                    if (sTemplate.newInstance.prototype != null && sTemplate.newInstance.prototype._annotations_ != null) {
-                        //使用class的prototype
-                        result._annotations_ = sTemplate.newInstance.prototype._annotations_;
-                    }
-                    else {
-                        result._annotations_ = new Annotations_1.Annotations();
-                    }
-                }
                 result._preComponents_ = [];
                 //模板与实例化绑定
-                result._annotations_.scannedTemplate = sTemplate;
             }
             else {
                 result = sTemplate.instances[0];
             }
+            ObjBox.setInstanceToExtendsAnnotations(sTemplate, result);
         }
         return result;
     }
@@ -642,15 +633,32 @@ class ObjBox {
         delete this.componentTempPool[key];
         this.componentTempPool_Function.delete(clazz);
     }
+    static setInstanceToExtendsAnnotations(sTemplate, instance) {
+        if (instance._annotations_ == null) {
+            if (sTemplate.newInstance.prototype != null && sTemplate.newInstance.prototype._annotations_ != null) {
+                //使用class的prototype
+                instance._annotations_ = sTemplate.newInstance.prototype._annotations_;
+            }
+            else {
+                instance._annotations_ = new Annotations_1.Annotations();
+            }
+        }
+        if (instance._annotations_.scannedTemplate == null) {
+            instance._annotations_.scannedTemplate = sTemplate;
+        }
+        return instance;
+    }
     /**
      * 从模板获取单例模式的实例
      * @param template
      */
-    getSingletonInstanceFromTemplate(template) {
-        if (template != null) {
-            if (template.createdType == Annotations_1.ComponentCreatedType.Singleton) {
-                if (template.instances != null && template.instances.length > 0) {
-                    return template.instances[0];
+    getSingletonInstanceFromTemplate(sTemplate) {
+        if (sTemplate != null) {
+            if (sTemplate.createdType == Annotations_1.ComponentCreatedType.Singleton) {
+                if (sTemplate.instances != null && sTemplate.instances.length > 0) {
+                    let result = sTemplate.instances[0];
+                    ObjBox.setInstanceToExtendsAnnotations(sTemplate, result);
+                    return result;
                 }
             }
         }
