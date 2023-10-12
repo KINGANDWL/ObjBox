@@ -18,7 +18,12 @@ class ClassAnnotation {
     }
     pushAnnotation(annotationName, annotationArgs) {
         if (this.annotationNameMap[annotationName] != null) {
-            throw new Error(annotationName + " is repeat in the same class");
+            if (annotationName == Component.name) {
+                console.log(annotationName + " is repeat in the same class. But that annotation is allowed to be repeat and it will be updated");
+            }
+            else {
+                throw new Error(annotationName + " is repeat in the same class");
+            }
         }
         let obj = { annotationName, annotationArgs };
         this.annotationNameMap[annotationName] = obj;

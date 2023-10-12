@@ -26,7 +26,11 @@ export class ClassAnnotation {
     annotationNameMap: object = {} //Map<string,ClassAnnotationType>
     pushAnnotation<T>(annotationName: string, annotationArgs?: T) {
         if (this.annotationNameMap[annotationName] != null) {
-            throw new Error(annotationName + " is repeat in the same class")
+            if(annotationName == Component.name){
+                console.log(annotationName + " is repeat in the same class. But that annotation is allowed to be repeat and it will be updated");
+            }else{
+                throw new Error(annotationName + " is repeat in the same class");
+            }
         }
         let obj: ClassAnnotationType<T> = { annotationName, annotationArgs }
         this.annotationNameMap[annotationName] = obj
@@ -222,11 +226,11 @@ export function registerMethod<T>(annotationName: string, args: T, target: Compo
 export function registerClass<T>(annotationName: string, args: T, target: Function) {
     if (target != null && target.prototype != null) {
         if (target.prototype._annotations_ == null) {
-            target.prototype._annotations_ = new Annotations()
+            target.prototype._annotations_ = new Annotations();
         }
-        let _annotations_: Annotations = target.prototype._annotations_
-        _annotations_.classConstructor = target as Constructor
-        _annotations_.clazz.pushAnnotation<T>(annotationName, args)
+        let _annotations_: Annotations = target.prototype._annotations_;
+        _annotations_.classConstructor = target as Constructor;
+        _annotations_.clazz.pushAnnotation<T>(annotationName, args);
     }
 }
 
