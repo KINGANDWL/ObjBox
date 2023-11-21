@@ -10,7 +10,14 @@ import { ComponentHandlerInterface } from "./interface/ComponentHandler.interfac
 import { TemplateHandler } from "./interface/TemplateHandler.interface";
 import { ObjBoxInterface } from "./interface/ObjBox.interface";
 import { ScanDir } from "./entity/ScanDir";
-const fs = require("fs");
+
+var fs = null;
+
+try{
+    fs = require("fs");
+}catch(err){
+    console.warn(`Cannot find "fs" moddule. And maybe the objbox is running in browser.`);
+}
 
 export class ObjBox implements ObjBoxInterface {
     private config = {

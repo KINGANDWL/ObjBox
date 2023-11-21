@@ -6,7 +6,13 @@ const LoggerManager_1 = require("../libs/logger/LoggerManager");
 const Annotations_1 = require("./annotation/Annotations");
 const Annotations_2 = require("./annotation/Annotations");
 const ScanDir_1 = require("./entity/ScanDir");
-const fs = require("fs");
+var fs = null;
+try {
+    fs = require("fs");
+}
+catch (err) {
+    console.warn(`Cannot find "fs" moddule. And maybe the objbox is running in browser.`);
+}
 class ObjBox {
     // private static fs_extra: any = null
     constructor(loggerConfig) {
