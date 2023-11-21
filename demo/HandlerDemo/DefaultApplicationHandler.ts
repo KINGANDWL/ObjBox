@@ -4,7 +4,7 @@ import { Logger } from '../../libs';
 @ApplicationHandler()
 export class DefaultApplicationHandler implements ApplicationHandlerInterface {
     private logger: Logger = null
-    async start(objbox: ObjBoxInterface) {
+    start(objbox: ObjBoxInterface) {
         if (this.logger == null) {
             this.logger = objbox.getLoggerManager().getLogger(DefaultApplicationHandler)
             objbox.printLogo()

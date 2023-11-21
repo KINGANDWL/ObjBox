@@ -397,8 +397,8 @@ export class ObjBoxHelper {
      * 创建新objbox容器
      * @param loggerConfig 
      */
-    public static newObjBox(loggerConfig?: LoggerManagerConfig, fs_extra: any = null): ObjBoxInterface {
-        return new ObjBox(loggerConfig, fs_extra);
+    public static newObjBox(loggerConfig?: LoggerManagerConfig): ObjBoxInterface {
+        return new ObjBox(loggerConfig);
     }
 
     /**

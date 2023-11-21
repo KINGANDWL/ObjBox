@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ObjBox = void 0;
 const LoggerManagerConfig_1 = require("../libs/logger/LoggerManagerConfig");
@@ -15,8 +6,10 @@ const LoggerManager_1 = require("../libs/logger/LoggerManager");
 const Annotations_1 = require("./annotation/Annotations");
 const Annotations_2 = require("./annotation/Annotations");
 const ScanDir_1 = require("./entity/ScanDir");
+const fs = require("fs");
 class ObjBox {
-    constructor(loggerConfig, fs_extra = null) {
+    // private static fs_extra: any = null
+    constructor(loggerConfig) {
         this.config = {
             version: [1, 0, 0],
             objBoxLogger: LoggerManagerConfig_1.DefaultManagerConfig
@@ -50,9 +43,6 @@ class ObjBox {
         }
         this.loggerManager = new LoggerManager_1.LoggerManager(this.config.objBoxLogger);
         this.logger = this.loggerManager.getLogger(ObjBox);
-        if (ObjBox.fs_extra == null && fs_extra != null) {
-            ObjBox.fs_extra = fs_extra;
-        }
     }
     /**
      * 重置日志
@@ -73,11 +63,6 @@ class ObjBox {
     getLoggerManager() {
         return this.loggerManager;
     }
-    static testFsExtra() {
-        if (ObjBox.fs_extra == null) {
-            throw new Error("You must set fs-extra into ObjBox before you register from files.");
-        }
-    }
     /**
      * 判断一个函数是否是class（构造函数）
      * @param fun
@@ -90,10 +75,9 @@ class ObjBox {
      * @param path
      */
     static isJSFile(path) {
-        ObjBox.testFsExtra();
         let endness = ".js";
-        if (path != null && ObjBox.fs_extra.existsSync(path)) {
-            return ObjBox.fs_extra.statSync(path).isFile() && path.indexOf(endness) == path.length - endness.length;
+        if (path != null && fs.existsSync(path)) {
+            return fs.lstatSync(path).isFile() && path.indexOf(endness) == path.length - endness.length;
         }
         return false;
     }
@@ -102,34 +86,33 @@ class ObjBox {
      * @param path
      */
     static readFunctionsFromFile(path) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let result = [];
-            if (ObjBox.isJSFile(path)) {
-                let fileExports = yield Promise.resolve(`${path.replace(/.js$/, "")}`).then(s => require(s));
-                for (let index in fileExports) {
-                    if (ObjBox.isClass(fileExports[index])) {
-                        result.push(fileExports[index]);
-                    }
+        let result = [];
+        if (ObjBox.isJSFile(path)) {
+            // let fileExports = await import(path.replace(/.js$/, ""))
+            //@ts-ignore
+            let fileExports = require(path.replace(/.js$/, ""));
+            for (let index in fileExports) {
+                if (ObjBox.isClass(fileExports[index])) {
+                    result.push(fileExports[index]);
                 }
             }
-            return result;
-        });
+        }
+        return result;
     }
     /**
      * 通过目录获取所有的文件路径
      * @param scannedDirs
      */
     static listAllFiles(scannedDirs) {
-        ObjBox.testFsExtra();
         let result = [];
         if (scannedDirs != null && scannedDirs.length > 0) {
             for (let scannedDir of scannedDirs) {
-                if (ObjBox.fs_extra.existsSync(scannedDir.dirPath)) {
-                    if (ObjBox.fs_extra.statSync(scannedDir.dirPath).isFile()) {
+                if (fs.existsSync(scannedDir.dirPath)) {
+                    if (fs.lstatSync(scannedDir.dirPath).isFile()) {
                         result.push(scannedDir.dirPath);
                     }
                     else {
-                        let files = ObjBox.fs_extra.readdirSync(scannedDir.dirPath);
+                        let files = fs.readdirSync(scannedDir.dirPath);
                         for (let eacnfileName of files) {
                             if (!scannedDir.isExclude(eacnfileName)) {
                                 let childFiles = ObjBox.listAllFiles([new ScanDir_1.ScanDir(scannedDir.dirPath + "/" + eacnfileName, scannedDir.excludeRegExp)]);
@@ -520,14 +503,12 @@ class ObjBox {
         }
     }
     executeApplicationHandler_start() {
-        return __awaiter(this, void 0, void 0, function* () {
-            let allAH = this.getAllApplicationHandler();
-            for (let ah of allAH) {
-                if (ah.start != null) {
-                    yield ah.start(this);
-                }
+        let allAH = this.getAllApplicationHandler();
+        for (let ah of allAH) {
+            if (ah.start != null) {
+                ah.start(this);
             }
-        });
+        }
     }
     executeApplicationHandler_preprocessScannedTemplate(sTemplates) {
         let allAH = this.getAllApplicationHandler();
@@ -821,19 +802,17 @@ class ObjBox {
      * @param scannedDirs
      */
     registerFromFiles(scannedDirs) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (scannedDirs == null) {
-                scannedDirs = [];
+        if (scannedDirs == null) {
+            scannedDirs = [];
+        }
+        // 1、扫描组件文件，生成class的function
+        let filepathArray = ObjBox.listAllFiles(scannedDirs); //罗列所有扫描文件列表
+        for (let filepath of filepathArray) {
+            let functionArray = ObjBox.readFunctionsFromFile(filepath);
+            for (let fun of functionArray) {
+                this.registerClass(fun, filepath);
             }
-            // 1、扫描组件文件，生成class的function
-            let filepathArray = ObjBox.listAllFiles(scannedDirs); //罗列所有扫描文件列表
-            for (let filepath of filepathArray) {
-                let functionArray = yield ObjBox.readFunctionsFromFile(filepath);
-                for (let fun of functionArray) {
-                    this.registerClass(fun, filepath);
-                }
-            }
-        });
+        }
     }
     /**
      * 从文件注册模板
@@ -937,47 +916,45 @@ class ObjBox {
      * 开始装载所有注册模板
      */
     load() {
-        return __awaiter(this, void 0, void 0, function* () {
-            // 6、对所有模板触发 @ApplicationHandler 的 start(objBox)
-            yield this.executeApplicationHandler_start();
-            //7、对所有模板触发 @ApplicationHandler 的 preprocessScannedTemplate(objbox,sTemplates[])
-            let allSTemplate = this.getAllComponentTemplate();
-            this.executeApplicationHandler_preprocessScannedTemplate(allSTemplate);
-            // 8、校验模板是否为 @ComponentHandler 实例化并存储
-            for (let sTemplate of allSTemplate) {
-                if (ObjBox.isTemplateTypeofComponentHandler(sTemplate)) {
-                    this.trySaveComponentHandler(sTemplate);
-                }
+        // 6、对所有模板触发 @ApplicationHandler 的 start(objBox)
+        this.executeApplicationHandler_start();
+        //7、对所有模板触发 @ApplicationHandler 的 preprocessScannedTemplate(objbox,sTemplates[])
+        let allSTemplate = this.getAllComponentTemplate();
+        this.executeApplicationHandler_preprocessScannedTemplate(allSTemplate);
+        // 8、校验模板是否为 @ComponentHandler 实例化并存储
+        for (let sTemplate of allSTemplate) {
+            if (ObjBox.isTemplateTypeofComponentHandler(sTemplate)) {
+                this.trySaveComponentHandler(sTemplate);
             }
-            // 9、校验模板是否为 @BeanComponent 实例化并创建 @Bean 的组件模板
-            for (let sTemplate of allSTemplate) {
-                if (ObjBox.isTemplateTypeofBeanComponent(sTemplate)) {
-                    this.trySaveBeanComponent(sTemplate);
-                }
+        }
+        // 9、校验模板是否为 @BeanComponent 实例化并创建 @Bean 的组件模板
+        for (let sTemplate of allSTemplate) {
+            if (ObjBox.isTemplateTypeofBeanComponent(sTemplate)) {
+                this.trySaveBeanComponent(sTemplate);
             }
-            let allBeanTempaltes = [];
-            let allBeanComponent = this.getAllBeanComponent();
-            for (let bc of allBeanComponent) {
-                let beanTemplates = ObjBox.createBeanTemplatesFromBeanComponent(bc);
-                allBeanTempaltes = allBeanTempaltes.concat(beanTemplates);
-                for (let eachBT of beanTemplates) {
-                    this.trySaveComponentTemplate(eachBT);
-                }
+        }
+        let allBeanTempaltes = [];
+        let allBeanComponent = this.getAllBeanComponent();
+        for (let bc of allBeanComponent) {
+            let beanTemplates = ObjBox.createBeanTemplatesFromBeanComponent(bc);
+            allBeanTempaltes = allBeanTempaltes.concat(beanTemplates);
+            for (let eachBT of beanTemplates) {
+                this.trySaveComponentTemplate(eachBT);
             }
-            // 10、对新建的 @bean 模板触发 @ApplicationHandler 的 preprocessScannedTemplate(objbox,sTemplates[])
-            this.executeApplicationHandler_preprocessScannedTemplate(allBeanTempaltes);
-            // 11、对所有模板触发 @ComponentHandler 的 scaned(objbox,name,sTemplate)
-            allSTemplate = this.getAllComponentTemplate();
-            for (let sTemplate of allSTemplate) {
-                this.executeComponentHandler_scanned(sTemplate);
-            }
-            // 12、触发应用处理器 @ApplicationHandler 的 processBeforePrepare(objbox)
-            this.executeApplicationHandler_BeforePrepare();
-            // 13、对所有模板创建第一个实例组件并进行依赖注入
-            this.prepareComponents();
-            // 14、触发应用处理器 @ApplicationHandler 的 processAfterPrepare(objbox)
-            this.executeApplicationHandler_AfterPrepare();
-        });
+        }
+        // 10、对新建的 @bean 模板触发 @ApplicationHandler 的 preprocessScannedTemplate(objbox,sTemplates[])
+        this.executeApplicationHandler_preprocessScannedTemplate(allBeanTempaltes);
+        // 11、对所有模板触发 @ComponentHandler 的 scaned(objbox,name,sTemplate)
+        allSTemplate = this.getAllComponentTemplate();
+        for (let sTemplate of allSTemplate) {
+            this.executeComponentHandler_scanned(sTemplate);
+        }
+        // 12、触发应用处理器 @ApplicationHandler 的 processBeforePrepare(objbox)
+        this.executeApplicationHandler_BeforePrepare();
+        // 13、对所有模板创建第一个实例组件并进行依赖注入
+        this.prepareComponents();
+        // 14、触发应用处理器 @ApplicationHandler 的 processAfterPrepare(objbox)
+        this.executeApplicationHandler_AfterPrepare();
     }
     /**
      * 启动应用
@@ -1019,7 +996,6 @@ class ObjBox {
     `);
     }
 }
-ObjBox.fs_extra = null;
 exports.ObjBox = ObjBox;
 /**
  * 基于typescript与nodejs的轻量级IOC容器
@@ -1103,7 +1079,7 @@ exports.ObjBox = ObjBox;
     let ob = ObjBoxHelper.newObjBox(applicationConfig.ObjBoxLogger);
     
     // 方式1：从文件注册模板
-    await ob.registerFromFiles([
+    ob.registerFromFiles([
         new ScanDir(__dirname + "/src/main", [/(outerProject)/])
     ])
 
@@ -1122,7 +1098,7 @@ exports.ObjBox = ObjBox;
     // ob.registerByObject({v:123},"obj")
 
     // 启动装载
-    await ob.load()
+    ob.load()
 
     //启动容器应用
     ob.run();

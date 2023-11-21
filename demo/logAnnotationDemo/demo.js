@@ -5,15 +5,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Log = void 0;
 //main.ts
@@ -21,7 +12,6 @@ const __1 = require("../../");
 const libs_1 = require("../..//libs");
 const __2 = require("../../");
 const Level_1 = require("../../libs/logger/Level");
-const fs_extra = require("fs-extra");
 /**
  * 默认方法注解模板
  * @param yourArg1
@@ -66,25 +56,23 @@ YourClass = __decorate([
     (0, __1.Component)()
 ], YourClass);
 function main() {
-    return __awaiter(this, void 0, void 0, function* () {
-        // 配置容器日志（非必要）
-        let loggerConfig = {
-            level: Level_1.Level.ALL,
-            timeFormate: `${libs_1.TimeFlag.Year}-${libs_1.TimeFlag.Month}-${libs_1.TimeFlag.Day} ${libs_1.TimeFlag.Hour}:${libs_1.TimeFlag.Minute}:${libs_1.TimeFlag.Second}`
-        };
-        let ob = __1.ObjBoxHelper.newObjBox(loggerConfig, fs_extra);
-        ob.registerFromClass(LogHandler);
-        ob.registerFromClass(YourClass);
-        yield ob.registerFromFiles([
-            new __1.ScanDir(__dirname + "/../HandlerDemo/"),
-            new __1.ScanDir(__dirname + "/../ComponentScanDemo/")
-        ]);
-        // 启动装载
-        yield ob.load();
-        //启动容器应用
-        ob.run();
-        let yourclass = ob.getComponent(YourClass.name);
-        yourclass.add(123, 456);
-    });
+    // 配置容器日志（非必要）
+    let loggerConfig = {
+        level: Level_1.Level.ALL,
+        timeFormate: `${libs_1.TimeFlag.Year}-${libs_1.TimeFlag.Month}-${libs_1.TimeFlag.Day} ${libs_1.TimeFlag.Hour}:${libs_1.TimeFlag.Minute}:${libs_1.TimeFlag.Second}`
+    };
+    let ob = __1.ObjBoxHelper.newObjBox(loggerConfig);
+    ob.registerFromClass(LogHandler);
+    ob.registerFromClass(YourClass);
+    ob.registerFromFiles([
+        new __1.ScanDir(__dirname + "/../HandlerDemo/"),
+        new __1.ScanDir(__dirname + "/../ComponentScanDemo/")
+    ]);
+    // 启动装载
+    ob.load();
+    //启动容器应用
+    ob.run();
+    let yourclass = ob.getComponent(YourClass.name);
+    yourclass.add(123, 456);
 }
 main();

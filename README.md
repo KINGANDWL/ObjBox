@@ -47,7 +47,7 @@ import { Level, LoggerManagerConfig, TimeFlag } from "objbox/libs";
 import { DefaultApplicationHandler } from "objbox/demo/HandlerDemo/DefaultApplicationHandler"
 import { DefaultComponentHandler } from "objbox/demo/HandlerDemo/DefaultComponentHandler"
 
-async function main() {
+function main() {
     // 配置容器日志（非必要）
     let loggerConfig: LoggerManagerConfig = {
         level: Level.ALL,
@@ -62,7 +62,7 @@ async function main() {
 
 
     // 方式1：从文件扫描与注册模板，需要导入fs-extra
-    // await ob.registerFromFiles([
+    // ob.registerFromFiles([
     //     new ScanDir(__dirname + "/src")
     // ])
 
@@ -81,7 +81,7 @@ async function main() {
     ob.registerByObject({ v: 123 }, "obj")
 
     // 启动装载
-    await ob.load()
+    ob.load()
 
     //启动容器应用
     ob.run();
@@ -198,7 +198,7 @@ import { DefaultApplicationHandler } from "objbox/demo/HandlerDemo/DefaultApplic
 import { DefaultComponentHandler } from "objbox/demo/HandlerDemo/DefaultComponentHandler"
 import * as fs_extra from 'fs-extra';
 
-async function main() {
+function main() {
     // 配置容器日志（非必要）
     let loggerConfig: LoggerManagerConfig = {
         level: Level.ALL,
@@ -213,12 +213,12 @@ async function main() {
 
 
     // 方式1：从文件扫描与注册模板
-    await ob.registerFromFiles([
+    ob.registerFromFiles([
     	new ScanDir(__dirname + "/src")
     ])
 
     // 启动装载
-    await ob.load()
+    ob.load()
 
     //启动容器应用
     ob.run();
@@ -393,7 +393,7 @@ class YourClass {
 
 
 
-async function main() {
+function main() {
     // 配置容器日志（非必要）
     let loggerConfig: LoggerManagerConfig = {
         level: Level.ALL,
@@ -406,7 +406,7 @@ async function main() {
     ob.registerFromClass(YourClass)
 
     // 启动装载
-    await ob.load()
+    ob.load()
 
     //启动容器应用
     ob.run();

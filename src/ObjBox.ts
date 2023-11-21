@@ -10,7 +10,7 @@ import { ComponentHandlerInterface } from "./interface/ComponentHandler.interfac
 import { TemplateHandler } from "./interface/TemplateHandler.interface";
 import { ObjBoxInterface } from "./interface/ObjBox.interface";
 import { ScanDir } from "./entity/ScanDir";
-
+const fs = require("fs");
 
 export class ObjBox implements ObjBoxInterface {
     private config = {
@@ -44,8 +44,8 @@ export class ObjBox implements ObjBoxInterface {
         running: false
     }
 
-    private static fs_extra: any = null
-    constructor(loggerConfig?: LoggerManagerConfig, fs_extra: any = null) {
+    // private static fs_extra: any = null
+    constructor(loggerConfig?: LoggerManagerConfig) {
         if (loggerConfig != null) {
             for (let i in loggerConfig) {
                 this.config.objBoxLogger[i] = loggerConfig[i]
@@ -53,9 +53,6 @@ export class ObjBox implements ObjBoxInterface {
         }
         this.loggerManager = new LoggerManager(this.config.objBoxLogger)
         this.logger = this.loggerManager.getLogger(ObjBox);
-        if (ObjBox.fs_extra == null && fs_extra != null) {
-            ObjBox.fs_extra = fs_extra
-        }
     }
     /**
      * 重置日志
@@ -78,11 +75,6 @@ export class ObjBox implements ObjBoxInterface {
     }
 
 
-    private static testFsExtra() {
-        if (ObjBox.fs_extra == null) {
-            throw new Error("You must set fs-extra into ObjBox before you register from files.")
-        }
-    }
     /**
      * 判断一个函数是否是class（构造函数）
      * @param fun 
@@ -95,10 +87,9 @@ export class ObjBox implements ObjBoxInterface {
      * @param path 
      */
     private static isJSFile(path: string): boolean {
-        ObjBox.testFsExtra()
         let endness = ".js";
-        if (path != null && ObjBox.fs_extra.existsSync(path)) {
-            return ObjBox.fs_extra.statSync(path).isFile() && path.indexOf(endness) == path.length - endness.length
+        if (path != null && fs.existsSync(path)) {
+            return fs.lstatSync(path).isFile() && path.indexOf(endness) == path.length - endness.length
         }
         return false
     }
@@ -107,10 +98,12 @@ export class ObjBox implements ObjBoxInterface {
      * 从指定路径读取所有class
      * @param path 
      */
-    private static async readFunctionsFromFile(path: string): Promise<Function[]> {
+    private static readFunctionsFromFile(path: string): Function[] {
         let result: Function[] = []
         if (ObjBox.isJSFile(path)) {
-            let fileExports = await import(path.replace(/.js$/, ""))
+            // let fileExports = await import(path.replace(/.js$/, ""))
+            //@ts-ignore
+            let fileExports = require(path.replace(/.js$/, ""))
             for (let index in fileExports) {
                 if (ObjBox.isClass(fileExports[index])) {
                     result.push(fileExports[index])
@@ -124,15 +117,14 @@ export class ObjBox implements ObjBoxInterface {
      * @param scannedDirs 
      */
     private static listAllFiles(scannedDirs: ScanDir[]): string[] {
-        ObjBox.testFsExtra()
-        let result: string[] = []
+        let result: string[] = [];
         if (scannedDirs != null && scannedDirs.length > 0) {
             for (let scannedDir of scannedDirs) {
-                if (ObjBox.fs_extra.existsSync(scannedDir.dirPath)) {
-                    if (ObjBox.fs_extra.statSync(scannedDir.dirPath).isFile()) {
-                        result.push(scannedDir.dirPath)
+                if (fs.existsSync(scannedDir.dirPath)) {
+                    if (fs.lstatSync(scannedDir.dirPath).isFile()) {
+                        result.push(scannedDir.dirPath);
                     } else {
-                        let files = ObjBox.fs_extra.readdirSync(scannedDir.dirPath)
+                        let files = fs.readdirSync(scannedDir.dirPath);
                         for (let eacnfileName of files) {
                             if (!scannedDir.isExclude(eacnfileName)) {
                                 let childFiles = ObjBox.listAllFiles([new ScanDir(scannedDir.dirPath + "/" + eacnfileName, scannedDir.excludeRegExp)])
@@ -533,11 +525,11 @@ export class ObjBox implements ObjBoxInterface {
         }
     }
 
-    private async executeApplicationHandler_start() {
+    private executeApplicationHandler_start() {
         let allAH = this.getAllApplicationHandler();
         for (let ah of allAH) {
             if (ah.start != null) {
-                await ah.start(this);
+                ah.start(this);
             }
         }
     }
@@ -849,7 +841,7 @@ export class ObjBox implements ObjBoxInterface {
      * 从class注册模板
      * @param scannedDirs 
      */
-    async registerFromFiles(scannedDirs: ScanDir[]) {
+    registerFromFiles(scannedDirs: ScanDir[]) {
         if (scannedDirs == null) {
             scannedDirs = []
         }
@@ -857,7 +849,7 @@ export class ObjBox implements ObjBoxInterface {
         // 1、扫描组件文件，生成class的function
         let filepathArray = ObjBox.listAllFiles(scannedDirs);//罗列所有扫描文件列表
         for (let filepath of filepathArray) {
-            let functionArray: Function[] = await ObjBox.readFunctionsFromFile(filepath)
+            let functionArray: Function[] = ObjBox.readFunctionsFromFile(filepath)
             for (let fun of functionArray) {
                 this.registerClass(fun as Constructor, filepath)
             }
@@ -964,9 +956,9 @@ export class ObjBox implements ObjBoxInterface {
     /**
      * 开始装载所有注册模板
      */
-    async load() {
+    load() {
         // 6、对所有模板触发 @ApplicationHandler 的 start(objBox)
-        await this.executeApplicationHandler_start()
+        this.executeApplicationHandler_start()
 
         //7、对所有模板触发 @ApplicationHandler 的 preprocessScannedTemplate(objbox,sTemplates[])
         let allSTemplate = this.getAllComponentTemplate();
@@ -1144,7 +1136,7 @@ export class ObjBox implements ObjBoxInterface {
     let ob = ObjBoxHelper.newObjBox(applicationConfig.ObjBoxLogger);
     
     // 方式1：从文件注册模板
-    await ob.registerFromFiles([
+    ob.registerFromFiles([
         new ScanDir(__dirname + "/src/main", [/(outerProject)/])
     ])
 
@@ -1163,7 +1155,7 @@ export class ObjBox implements ObjBoxInterface {
     // ob.registerByObject({v:123},"obj")
 
     // 启动装载
-    await ob.load()
+    ob.load()
 
     //启动容器应用
     ob.run();

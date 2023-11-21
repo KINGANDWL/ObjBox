@@ -2,22 +2,7 @@
 # yarn lockfile v1
 
 
-"@types/fs-extra@^11.0.1":
-  version "11.0.1"
-  resolved "https://registry.npmmirror.com/@types/fs-extra/-/fs-extra-11.0.1.tgz"
-  integrity sha512-MxObHvNl4A69ofaTRU8DFqvgzzv8s9yRtaPPm5gud9HDNvpB3GPQFvNuTWAI59B9huVGV5jXYJwbCsmBsOGYWA==
-  dependencies:
-    "@types/jsonfile" "*"
-    "@types/node" "*"
-
-"@types/jsonfile@*":
-  version "6.1.1"
-  resolved "https://registry.npmmirror.com/@types/jsonfile/-/jsonfile-6.1.1.tgz"
-  integrity sha512-GSgiRCVeapDN+3pqA35IkQwasaCh/0YFH5dEF6S88iDvEn901DjOeH3/QPY+XYP1DFzDZPvIvfeEgk+7br5png==
-  dependencies:
-    "@types/node" "*"
-
-"@types/node@*", "@types/node@^18.15.12":
+"@types/node@^18.15.12":
   version "18.15.12"
   resolved "https://registry.npmmirror.com/@types/node/-/node-18.15.12.tgz"
   integrity sha512-Wha1UwsB3CYdqUm2PPzh/1gujGCNtWVUYF0mB00fJFoR4gTyWTDPjSm+zBF787Ahw8vSGgBja90MkgFwvB86Dg==

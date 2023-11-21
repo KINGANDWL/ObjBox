@@ -10,7 +10,7 @@ export interface ApplicationHandlerInterface {
      * 应用启动初期
      * @param objBox 
      */
-    start: (objBox: ObjBoxInterface) => Promise<void>
+    start: (objBox: ObjBoxInterface) => void
     /**
      * 模板预处理
      * @param objBox 应用对象 

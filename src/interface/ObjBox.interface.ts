@@ -53,7 +53,7 @@ export interface ObjBoxInterface {
     /**
      * 开始装载所有注册模板
      */
-    load: () => Promise<void>
+    load: () => void
     /**
      * 启动应用
      */
@@ -62,7 +62,7 @@ export interface ObjBoxInterface {
      * 从class注册模板
      * @param scannedDirs 
      */
-    registerFromFiles: (scannedDirs: ScanDir[]) => Promise<void>
+    registerFromFiles: (scannedDirs: ScanDir[]) => void
     /**
      * 通过名称获取组件已存在实例，不触发创建流程
      * @param name 组件名称

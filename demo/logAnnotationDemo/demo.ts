@@ -3,7 +3,6 @@ import { Component, ComponentHandler, ComponentHandlerInterface, ObjBoxHelper, O
 import { LoggerManagerConfig, TimeFlag } from "../..//libs";
 import { getFunName, registerMethod } from "../../"
 import { Level } from "../../libs/logger/Level";
-import * as fs_extra from 'fs-extra';
 
 /**
  * 默认方法注解模板
@@ -52,25 +51,25 @@ class YourClass {
 
 
 
-async function main() {
+function main() {
     // 配置容器日志（非必要）
     let loggerConfig: LoggerManagerConfig = {
         level: Level.ALL,
         timeFormate: `${TimeFlag.Year}-${TimeFlag.Month}-${TimeFlag.Day} ${TimeFlag.Hour}:${TimeFlag.Minute}:${TimeFlag.Second}`
     }
 
-    let ob = ObjBoxHelper.newObjBox(loggerConfig,fs_extra);
+    let ob = ObjBoxHelper.newObjBox(loggerConfig);
 
     ob.registerFromClass(LogHandler)
     ob.registerFromClass(YourClass)
 
-    await ob.registerFromFiles([
+    ob.registerFromFiles([
         new ScanDir(__dirname+"/../HandlerDemo/"),
         new ScanDir(__dirname+"/../ComponentScanDemo/")
     ])
 
     // 启动装载
-    await ob.load()
+    ob.load()
 
     //启动容器应用
     ob.run();
