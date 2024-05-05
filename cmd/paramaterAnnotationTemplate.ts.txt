@@ -1,21 +1,61 @@
-import { getFunName, registerMethodArguments } from "objbox"
+import { 
+    ComponentHandler, ComponentHandlerInterface, 
+    ObjBoxHelper, ObjBoxInterface, ScannedTemplate, 
+    getFunName, registerMethodArguments 
+} from "objbox"
 
-//用于外部获取注解参数【非必要】
+//自定义class的成员方法的参数的注解%AnnotationName%的参数
 export interface %AnnotationName%Arg {
-    yourArg1: any
-    yourArg2: any
+    yourArg1: any // 注解参数1
+    yourArg2: any // 注解参数2
 }
 /**
- * 默认参数注解模板
+ * 自定义class的成员方法的参数的注解%AnnotationName%
  * @param yourArg1 
  * @param yourArg2 
  */
-export function %AnnotationName%(yourArg1: any, yourArg2: any): MethodDecorator {
+export function %AnnotationName%(yourArg1: any, yourArg2: any): ParameterDecorator {
     //获取当前函数名称，等效于let _annotationName = "%AnnotationName%"
     let _annotationName = getFunName(2)
 
     //@ts-ignore
     return function (target: any, key: string, index: number) {
         registerMethodArguments<%AnnotationName%Arg>(_annotationName, { yourArg1, yourArg2 }, key, index, target)
+    }
+}
+
+
+/**
+ * 实现注解 @%AnnotationName%(<%AnnotationName%Arg>) 功能
+ */
+@ComponentHandler()
+export class %AnnotationName%AnnotationHandler implements ComponentHandlerInterface {
+    // 模板刚扫描完成
+    scanned(objbox: ObjBoxInterface, template: ScannedTemplate) {
+        let methodInfoAnno = ObjBoxHelper.getMethodArgsAnnotationFromTemplate<%AnnotationName%Arg>(%AnnotationName%.name, template);
+        if (methodInfoAnno.length > 0) {
+            // 这里加工被扫描的组件模版
+        }
+    }
+    // 组件刚创建完成
+    created(objbox: ObjBoxInterface, template: ScannedTemplate, component: any) {
+        let methodInfoAnno = ObjBoxHelper.getMethodArgsAnnotationFromComponent<%AnnotationName%Arg>(%AnnotationName%.name, component);
+        if (methodInfoAnno.length > 0) {
+            // 这里加工刚刚创建好但是并未进行任何注入的原始组件对象
+        }
+    }
+    // 组件完成注入与配置
+    completed(objbox: ObjBoxInterface, template: ScannedTemplate, component: any) {
+        let methodInfoAnno = ObjBoxHelper.getMethodArgsAnnotationFromComponent<%AnnotationName%Arg>(%AnnotationName%.name, component);
+        if (methodInfoAnno.length > 0) {
+            // 这里加工完成对象注入的完全组件对象，此时对象还未被任何其他组件引用（现在是第一次）
+        }
+    }
+    // objbox准备就绪
+    ready(objbox: ObjBoxInterface, template: ScannedTemplate, component: any) {
+        let methodInfoAnno = ObjBoxHelper.getMethodArgsAnnotationFromComponent<%AnnotationName%Arg>(%AnnotationName%.name, component);
+        if (methodInfoAnno.length > 0) {
+            // objbox准备就绪，下一步就是整个框架开始运行
+        }
     }
 }

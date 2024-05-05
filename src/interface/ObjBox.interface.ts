@@ -73,20 +73,20 @@ export interface ObjBoxInterface {
      * @param obj 任意obj对象
      * @param name 组件名称 
      */
-    registerByObject: (obj: Object, name: string, scope?: ComponentCreatedType) => void
+    registerByObject: (obj: Object, name: string, scope?: ComponentCreatedType, priority?: number) => void
     /**
      * 从文件注册模板
      * @param clazz class名称
      * @param name 组件名称 
      * @param scope 创建方式 
      */
-    registerFromClass: (clazz: Function, name?: string, scope?: ComponentCreatedType) => void
+    registerFromClass: (clazz: Function, name?: string, scope?: ComponentCreatedType, priority?: number) => void
     /**
      * 从method创建的对象注册模板
      * @param method 能够创建对象的函数
      * @param name 组件名称 
      * @param scope 创建方式 
      */
-    registerFromMethod: (method: Function, name?: string, scope?: ComponentCreatedType) => void
+    registerFromMethod: (method: Function, name?: string, scope?: ComponentCreatedType, priority?: number) => void
 
 }

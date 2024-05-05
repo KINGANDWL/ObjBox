@@ -13,9 +13,9 @@ import { ScanDir } from "./entity/ScanDir";
 
 var fs = null;
 
-try{
+try {
     fs = require("fs");
-}catch(err){
+} catch (err) {
     console.warn(`Cannot find "fs" moddule. And maybe the objbox is running in browser.`);
 }
 
@@ -29,23 +29,23 @@ export class ObjBox implements ObjBoxInterface {
     /**
      * 应用处理器模板
      */
-    private applicationHandlerScannedTemplates: {[key:string]:ScannedTemplate} = {} //<string,ScannedTemplate>
+    private applicationHandlerScannedTemplates: { [key: string]: ScannedTemplate } = {} //<string,ScannedTemplate>
     /**
      * 组件处理器模板
      */
-    private componentHandlerScannedTemplates: {[key:string]:ScannedTemplate} = {} //<string,ScannedTemplate>
+    private componentHandlerScannedTemplates: { [key: string]: ScannedTemplate } = {} //<string,ScannedTemplate>
     /**
      * 组件模板
     */
-    private componentScannedTemplates: {[key:string]:ScannedTemplate} = {} //<string,ScannedTemplate>
-    private componentScannedTemplates_Function: Map<Function,ScannedTemplate> = new Map();
+    private componentScannedTemplates: { [key: string]: ScannedTemplate } = {} //<string,ScannedTemplate>
+    private componentScannedTemplates_Function: Map<Function, ScannedTemplate> = new Map();
     /**
      * bean组件模板
     */
-    private beanComponentTemplates: {[key:string]:ScannedTemplate} = {} //<string,ScannedTemplate>
+    private beanComponentTemplates: { [key: string]: ScannedTemplate } = {} //<string,ScannedTemplate>
 
-    private componentTempPool:{[key:string]:any} = {}
-    private componentTempPool_Function:Map<Function,any> = new Map()
+    private componentTempPool: { [key: string]: any } = {}
+    private componentTempPool_Function: Map<Function, any> = new Map()
 
     private status: { running: boolean } = {
         running: false
@@ -192,12 +192,13 @@ export class ObjBox implements ObjBoxInterface {
         let prot = fun.prototype as ComponentInterface
         let componentAnnotation = prot._annotations_.clazz.getAnnotation<ComponentAnnotationArgs>(ComponentAnnotation.name);
         let temp: ScannedTemplate = {
-            componentName: componentAnnotation == null ? fun.name : componentAnnotation.annotationArgs.name, //如果没有用Component作为组件名称，则默认使用class名称
+            componentName: (componentAnnotation == null || componentAnnotation.annotationArgs.name == null) ? fun.name : componentAnnotation.annotationArgs.name, //如果没有用Component作为组件名称，则默认使用class名称
+            priority: (componentAnnotation == null || componentAnnotation.annotationArgs.priority == null) ? 0 : Math.trunc(componentAnnotation.annotationArgs.priority),
             className: fun.name,
             newInstance: fun as Constructor,
             filePath: filePath,
             instances: [],
-            createdType: componentAnnotation == null ? ComponentCreatedType.Singleton : componentAnnotation.annotationArgs.scope,
+            createdType: (componentAnnotation == null || componentAnnotation.annotationArgs.scope == null) ? ComponentCreatedType.Singleton : componentAnnotation.annotationArgs.scope,
             originalType: ComponentOriginalType.Component
         }
         return temp
@@ -305,17 +306,51 @@ export class ObjBox implements ObjBoxInterface {
      */
     private trySaveComponentTemplate(sTemplate: ScannedTemplate) {
         if (this.componentScannedTemplates[sTemplate.componentName] != null) {
-            let st = this.componentScannedTemplates[sTemplate.componentName] as ScannedTemplate
-            throw new Error(`Component "${sTemplate.componentName}" is repeat between "${st.filePath}"[${st.newInstance.name}] and "${sTemplate.filePath}"[${sTemplate.newInstance.name}]`);
+            let st: ScannedTemplate = this.componentScannedTemplates[sTemplate.componentName];
+
+            if (st.priority == null) {
+                st.priority = 0;
+            } else {
+                st.priority = Math.trunc(Number(st.priority));
+            }
+            if (sTemplate.priority == null) {
+                sTemplate.priority = 0;
+            } else {
+                st.priority = Math.trunc(Number(st.priority));
+            }
+
+            if (st.priority == sTemplate.priority) {
+                throw new Error(`Component "${sTemplate.componentName}" is repeat between "${st.filePath}"[${st.newInstance.name}] and "${sTemplate.filePath}"[${sTemplate.newInstance.name}]`);
+            } else if(st.priority < sTemplate.priority){
+                this.componentScannedTemplates[sTemplate.componentName] = sTemplate;
+            }
         } else {
             this.componentScannedTemplates[sTemplate.componentName] = sTemplate;
         }
-        if(sTemplate.newInstance != null){
-            if(this.componentScannedTemplates_Function.has(sTemplate.newInstance)){
-                let st = this.componentScannedTemplates_Function.get(sTemplate.newInstance) as ScannedTemplate
-                throw new Error(`Component "${sTemplate.componentName}" is repeat between "${st.filePath}"[${st.newInstance.name}] and "${sTemplate.filePath}"[${sTemplate.newInstance.name}]`);
-            }else{
-                this.componentScannedTemplates_Function.set(sTemplate.newInstance,sTemplate);
+
+        
+        if (sTemplate.newInstance != null) {
+            if (this.componentScannedTemplates_Function.has(sTemplate.newInstance)) {
+                let st: ScannedTemplate = this.componentScannedTemplates_Function.get(sTemplate.newInstance);
+
+                if (st.priority == null) {
+                    st.priority = 0;
+                } else {
+                    st.priority = Math.trunc(Number(st.priority));
+                }
+                if (sTemplate.priority == null) {
+                    sTemplate.priority = 0;
+                } else {
+                    st.priority = Math.trunc(Number(st.priority));
+                }
+
+                if (st.priority == sTemplate.priority) {
+                    throw new Error(`Component "${sTemplate.componentName}" is repeat between "${st.filePath}"[${st.newInstance.name}] and "${sTemplate.filePath}"[${sTemplate.newInstance.name}]`);
+                } else if(st.priority < sTemplate.priority) {
+                    this.componentScannedTemplates_Function.set(sTemplate.newInstance, sTemplate);
+                }
+            } else {
+                this.componentScannedTemplates_Function.set(sTemplate.newInstance, sTemplate);
             }
         }
     }
@@ -337,9 +372,9 @@ export class ObjBox implements ObjBoxInterface {
      * @param target 
      */
     getComponentTemplate(target: string | Function): ScannedTemplate | null {
-        if(typeof(target) == "string"){
+        if (typeof (target) == "string") {
             return this.componentScannedTemplates[target];
-        }else{
+        } else {
             return this.componentScannedTemplates_Function.get(target);
         }
     }
@@ -399,6 +434,7 @@ export class ObjBox implements ObjBoxInterface {
             for (let methodAnnotationType of beanAnnotation) {
                 let temp: ScannedTemplate = {
                     componentName: methodAnnotationType.annotationArgs.name,
+                    priority: methodAnnotationType.annotationArgs.priority,
                     className: "@" + Bean.name,
                     newInstance: beanComponent[methodAnnotationType.methodName].bind(beanComponent) as BeanMethod,
                     filePath: beanComponent._annotations_.scannedTemplate.filePath,
@@ -437,7 +473,7 @@ export class ObjBox implements ObjBoxInterface {
             } else {
                 result = sTemplate.instances[0];
             }
-            ObjBox.setInstanceToExtendsAnnotations(sTemplate,result)
+            ObjBox.setInstanceToExtendsAnnotations(sTemplate, result)
         }
 
         return result
@@ -596,7 +632,7 @@ export class ObjBox implements ObjBoxInterface {
                     }
                     injected._preComponents_.push(component);
                 } else if (info.annotationArgs.required == true) {
-                    let _name : string = typeof(info.annotationArgs.target) == "string"?info.annotationArgs.target:info.annotationArgs.target.name;
+                    let _name: string = typeof (info.annotationArgs.target) == "string" ? info.annotationArgs.target : info.annotationArgs.target.name;
                     throw new Error(`Cannot find component "${_name}" while injecting dependencies of "${component._annotations_.scannedTemplate.componentName}" by @AutowireProperty`)
                 }
             }
@@ -614,37 +650,37 @@ export class ObjBox implements ObjBoxInterface {
                     injected._preComponents_.push(component);
                     component[info.methodName](injected);
                 } else if (info.annotationArgs.required == true) {
-                    let _name : string = typeof(info.annotationArgs.target) == "string"?info.annotationArgs.target:info.annotationArgs.target.name;
+                    let _name: string = typeof (info.annotationArgs.target) == "string" ? info.annotationArgs.target : info.annotationArgs.target.name;
                     throw new Error(`Cannot find component "${_name}" while injecting dependencies of "${component._annotations_.scannedTemplate.componentName}" by @AutowireMethod`)
                 }
             }
         }
     }
 
-    private saveComponentToLevelTwo(key: string ,clazz : Function, component: ComponentInterface) {
+    private saveComponentToLevelTwo(key: string, clazz: Function, component: ComponentInterface) {
         if (this.componentTempPool[key] == null) {
             this.componentTempPool[key] = component;
         } else {
             throw new Error(`Wrong component "${key}" is in tempPool of level two`)
         }
         if (!this.componentTempPool_Function.has(clazz)) {
-            this.componentTempPool_Function.set(clazz,component);
+            this.componentTempPool_Function.set(clazz, component);
         } else {
             throw new Error(`Wrong component "${clazz.name}" is in tempPool of level two`)
         }
     }
     private getComponentFromTempPool(target: string | Function): ComponentInterface {
-        if(typeof(target) == "string"){
+        if (typeof (target) == "string") {
             return this.componentTempPool[target]
-        }else{
+        } else {
             return this.componentTempPool_Function.get(target);
         }
     }
-    private removeComponentfromTempPool(key: string , clazz: Function) {
+    private removeComponentfromTempPool(key: string, clazz: Function) {
         delete this.componentTempPool[key]
         this.componentTempPool_Function.delete(clazz);
     }
-    private static setInstanceToExtendsAnnotations(sTemplate:ScannedTemplate,instance:ComponentInterface) : ComponentInterface{
+    private static setInstanceToExtendsAnnotations(sTemplate: ScannedTemplate, instance: ComponentInterface): ComponentInterface {
         if (instance._annotations_ == null) {
             if (sTemplate.newInstance.prototype != null && sTemplate.newInstance.prototype._annotations_ != null) {
                 //使用class的prototype
@@ -653,7 +689,7 @@ export class ObjBox implements ObjBoxInterface {
                 instance._annotations_ = new Annotations()
             }
         }
-        if(instance._annotations_.scannedTemplate == null){
+        if (instance._annotations_.scannedTemplate == null) {
             instance._annotations_.scannedTemplate = sTemplate;
         }
         return instance;
@@ -667,7 +703,7 @@ export class ObjBox implements ObjBoxInterface {
             if (sTemplate.createdType == ComponentCreatedType.Singleton) {
                 if (sTemplate.instances != null && sTemplate.instances.length > 0) {
                     let result = sTemplate.instances[0]
-                    ObjBox.setInstanceToExtendsAnnotations(sTemplate,result)
+                    ObjBox.setInstanceToExtendsAnnotations(sTemplate, result)
                     return result
                 }
             }
@@ -724,7 +760,7 @@ export class ObjBox implements ObjBoxInterface {
 
                         // 13.7、依赖注入 @Component 组件 objbox.injectComponentDependency(component)
                         this.injectComponentDependency(component);//依赖注入
-                        this.removeComponentfromTempPool(scannedTemplate.componentName,scannedTemplate.newInstance); //移除缓存中的数据
+                        this.removeComponentfromTempPool(scannedTemplate.componentName, scannedTemplate.newInstance); //移除缓存中的数据
 
                         // 13.8、触发 @ComponentHandler 的 completed(objbox,sTemplate,component)
                         this.executeComponentHandler_beforeCompleted(scannedTemplate, component);
@@ -732,7 +768,7 @@ export class ObjBox implements ObjBoxInterface {
                         this.executeTemplateHandler_completed(component);
                         // 13.10、触发 @ComponentHandler 的 completed(objbox,sTemplate,component)
                         this.executeComponentHandler_afterCompleted(scannedTemplate, component);
-                        
+
                         // 13.11、如果应用已经运行，触发 @TemplateHandler 的 ready
                         if (this.status.running == true) {
                             // 13.11.1、触发 @ComponentHandler 的 beforeReady(objbox,sTemplate,component)
@@ -831,11 +867,11 @@ export class ObjBox implements ObjBoxInterface {
         // 2、验证function的prototype规范性
         if (ObjBox.isFunctionTypeofTemplate(clazz)) {
             // 3、通过function创建组件扫描模板ScannedTemplate
-            let sTemplate = ObjBox.createComponentTemplatesFromFunctions(clazz, filepath)
+            let sTemplate = ObjBox.createComponentTemplatesFromFunctions(clazz, filepath);
 
             // 4、校验模板是否为ApplicationHandler实例化并存储
             if (ObjBox.isTemplateTypeofApplicationHandler(sTemplate)) {
-                this.trySaveApplicationHandler(sTemplate)
+                this.trySaveApplicationHandler(sTemplate);
             }
 
             // 5、存储所有组件模板（如果ApplicationHandler被标注为Component，会成为单例组件）
@@ -856,7 +892,7 @@ export class ObjBox implements ObjBoxInterface {
         // 1、扫描组件文件，生成class的function
         let filepathArray = ObjBox.listAllFiles(scannedDirs);//罗列所有扫描文件列表
         for (let filepath of filepathArray) {
-            let functionArray: Function[] = ObjBox.readFunctionsFromFile(filepath)
+            let functionArray: Function[] = ObjBox.readFunctionsFromFile(filepath);
             for (let fun of functionArray) {
                 this.registerClass(fun as Constructor, filepath)
             }
@@ -867,46 +903,71 @@ export class ObjBox implements ObjBoxInterface {
      * @param clazz class名称
      * @param name 组件名称 
      * @param scope 创建方式 
+     * @param priority 优先级，当出现同名组件时，优先级高的覆盖优先级低的 
      */
-    registerFromClass(clazz: Function, name?: string, scope?: ComponentCreatedType) {
+    registerFromClass(clazz: Function, name?: string, scope?: ComponentCreatedType, priority?: number) {
         let con = clazz as Constructor
-        let nameIsNull = false
+        let argNameIsNull = false, argpriorityIsNull = false;
         if (name == null) {
-            nameIsNull = true
+            argNameIsNull = true
             name = con.name
         }
-        if (scope == null) scope = ComponentCreatedType.Singleton
+        if (scope == null) scope = ComponentCreatedType.Singleton;
+        if (priority == null) {
+            argpriorityIsNull = true;
+            priority = 0;
+        } else {
+            priority = Math.trunc(Number(priority));
+        }
 
         // 普通的未处理的class
         if (!ObjBox.isFunctionTypeofTemplate(con)) {
+
             con.prototype._annotations_ = new Annotations()
             con.prototype._preComponents_ = []
             con.prototype._annotations_.clazz.pushAnnotation<ComponentAnnotationArgs>(Component.name, {
                 name: name,
-                scope: scope
-            })
-        }else{
-            let componentAnno = con.prototype._annotations_.clazz.getAnnotation<ComponentAnnotationArgs>(Component.name)
-            if( componentAnno!= null){
-                componentAnno.annotationArgs.scope = scope
-                if(!nameIsNull) componentAnno.annotationArgs.name = name
-            }else{
+                scope: scope,
+                priority: priority
+            });
+        } else {
+            let componentAnno = con.prototype._annotations_.clazz.getAnnotation<ComponentAnnotationArgs>(Component.name);
+            if (componentAnno != null) {
+                componentAnno.annotationArgs.scope = scope;
+                if (!argNameIsNull || componentAnno.annotationArgs.name == null) componentAnno.annotationArgs.name = name;
+                if (!argpriorityIsNull || componentAnno.annotationArgs.priority == null) componentAnno.annotationArgs.priority = priority;
+            } else {
                 con.prototype._annotations_.clazz.pushAnnotation<ComponentAnnotationArgs>(Component.name, {
                     name: name,
-                    scope: scope
-                })
-                if(!nameIsNull) {
-                    let componentAnno = con.prototype._annotations_.clazz.getAnnotation<ApplicationHandlerAnnotationArgs>(ApplicationHandler.name)
-                    if( componentAnno!= null){
-                        componentAnno.annotationArgs.name = name
+                    scope: scope,
+                    priority: priority
+                });
+
+                let componentAnno = con.prototype._annotations_.clazz.getAnnotation<ApplicationHandlerAnnotationArgs>(ApplicationHandler.name)
+                if (componentAnno != null) {
+                    if (!argNameIsNull) {
+                        componentAnno.annotationArgs.name = name;
                     }
-                    let componentAnno2 = con.prototype._annotations_.clazz.getAnnotation<ComponentHandlerAnnotationArgs>(ComponentHandler.name)
-                    if( componentAnno2!= null){
-                        componentAnno2.annotationArgs.name = name
+                    if (componentAnno.annotationArgs.name == null) {
+                        throw new Error(`the name of ApplicationHandler is undefined`);
                     }
-                    let componentAnno3 = con.prototype._annotations_.clazz.getAnnotation<BeanComponentAnnotationArgs>(BeanComponent.name)
-                    if( componentAnno3!= null){
-                        componentAnno3.annotationArgs.name = name
+                }
+                let componentAnno2 = con.prototype._annotations_.clazz.getAnnotation<ComponentHandlerAnnotationArgs>(ComponentHandler.name)
+                if (componentAnno2 != null) {
+                    if (!argNameIsNull) {
+                        componentAnno2.annotationArgs.name = name;
+                    }
+                    if (componentAnno2.annotationArgs.name == null) {
+                        throw new Error(`the name of ComponentHandler is undefined`);
+                    }
+                }
+                let componentAnno3 = con.prototype._annotations_.clazz.getAnnotation<BeanComponentAnnotationArgs>(BeanComponent.name)
+                if (componentAnno3 != null) {
+                    if (!argNameIsNull) {
+                        componentAnno3.annotationArgs.name = name;
+                    }
+                    if (componentAnno3.annotationArgs.name == null) {
+                        throw new Error(`the name of BeanComponent is undefined`);
                     }
                 }
             }
@@ -919,13 +980,16 @@ export class ObjBox implements ObjBoxInterface {
      * @param method 能够创建对象的函数
      * @param name 组件名称 
      * @param scope 创建方式 
+     * @param priority 优先级，当出现同名组件时，优先级高的覆盖优先级低的 
      */
-    registerFromMethod(method: Function, name?: string, scope?: ComponentCreatedType) {
+    registerFromMethod(method: Function, name?: string, scope?: ComponentCreatedType, priority?: number) {
         if (name == null) name = method.name
         if (scope == null) scope = ComponentCreatedType.Singleton
+        priority = Number(priority); priority = isNaN(priority) ? 0 : Math.trunc(priority);
 
         let temp: ScannedTemplate = {
             componentName: name,
+            priority: priority,
             className: "@" + Bean.name,
             newInstance: method as BeanMethod,
             filePath: "#registerFromMethod",
@@ -934,28 +998,41 @@ export class ObjBox implements ObjBoxInterface {
             originalType: ComponentOriginalType.Bean
         }
 
-        this.trySaveComponentTemplate(temp)
+        this.trySaveComponentTemplate(temp);
     }
     /**
      * 直接将对象注入到容器
      * @param obj 任意obj对象
      * @param name 组件名称 
+     * @param priority 优先级，当出现同名组件时，优先级高的覆盖优先级低的 
      */
-    registerByObject(obj: Object, name: string, scope?: ComponentCreatedType) {
+    registerByObject(obj: Object, name: string, scope?: ComponentCreatedType, priority?: number) {
         if (ObjBox.isObjectTypeofComponent(obj)) {
             // 如果对象内部存储着类信息
             let componentObj = obj as ComponentInterface
             if (componentObj._annotations_.classConstructor != null) {
                 let con = componentObj._annotations_.classConstructor;
-                this.registerFromClass(con, name, scope == null ? ComponentCreatedType.Singleton : scope)
-                this.componentScannedTemplates[name].instances = [obj as ComponentInterface]
-                return
+                this.registerFromClass(con, name, scope == null ? ComponentCreatedType.Singleton : scope, priority);
+                this.componentScannedTemplates[name].instances = [obj as ComponentInterface];
+                return;
             }
-        } else {
-            this.registerFromMethod(function () {
-                return obj
-            }, name, scope == null ? ComponentCreatedType.Singleton : scope)
         }
+
+        if (name == null) name = "annoymous"; //不可能为null，以防万一
+        priority = Number(priority); priority = isNaN(priority) ? 0 : Math.trunc(priority);
+
+        let temp: ScannedTemplate = {
+            componentName: name,
+            priority: priority,
+            className: "@" + Bean.name,
+            newInstance: function () { return obj },
+            filePath: "#registerByObject",
+            instances: [],
+            createdType: ComponentCreatedType.Singleton,
+            originalType: ComponentOriginalType.Bean
+        }
+
+        this.trySaveComponentTemplate(temp);
     }
 
 

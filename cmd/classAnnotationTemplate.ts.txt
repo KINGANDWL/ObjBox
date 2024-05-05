@@ -1,12 +1,17 @@
-import { ComponentCreatedType, getFunName, registerClass, Component } from "objbox"
+import { 
+    ComponentCreatedType, getFunName, 
+    registerClass, Component, ComponentHandler, 
+    ComponentHandlerInterface, ObjBoxHelper, 
+    ObjBoxInterface, ScannedTemplate 
+} from "objbox"
 
-//用于外部获取注解参数【非必要】
+//自定义class注解%AnnotationName%的参数
 export interface %AnnotationName%Arg{
-    yourArg1: any
-    yourArg2: any
+    yourArg1: any //注解参数1
+    yourArg2: any //注解参数2
 }
 /**
- * 默认class注解模板
+ * 自定义class注解：%AnnotationName%
  * @param yourArg1 
  * @param yourArg2 
  */
@@ -14,8 +19,52 @@ export function %AnnotationName% (yourArg1: any, yourArg2:any): ClassDecorator {
     //获取当前函数名称，等效于let _annotationName = "%AnnotationName%"
     let _annotationName = getFunName(2)
     return function (target: Function): any {
-        // 如果你希望这个注解能够直接成为组件注解，就手动给当前注解手动添加注册
+        // 如果你希望这个注解能够直接成为组件注解被objbox自动管理，就手动给当前注解手动添加注册
         // registerClass(Component.name, { name: target.name, scope: ComponentCreatedType.Singleton }, target)
         registerClass<%AnnotationName%Arg>(_annotationName, { yourArg1, yourArg2 }, target)
+    }
+}
+
+
+/**
+ * 实现注解 @%AnnotationName%(<%AnnotationName%Arg>) 功能
+ */
+@ComponentHandler()
+export class %AnnotationName%AnnotationHandler implements ComponentHandlerInterface {
+    // 模板刚扫描完成
+    scanned(objbox: ObjBoxInterface, template: ScannedTemplate) {
+        if (ObjBoxHelper.doesTemplateHaveClassAnnotation(%AnnotationName%.name, template)) {
+            let classInfoAnno = ObjBoxHelper.getClassAnnotationFromTemplate<%AnnotationName%Arg>(%AnnotationName%.name, template)
+            if (classInfoAnno != null) {
+                // 这里加工被扫描的组件模版
+            }
+        }
+    }
+    // 组件刚创建完成
+    created(objbox: ObjBoxInterface, template: ScannedTemplate, component: any){
+        if (ObjBoxHelper.doesComponentHaveClassAnnotation(%AnnotationName%.name, component)) {
+            let classInfoAnno = ObjBoxHelper.getClassAnnotationFromComponent<%AnnotationName%Arg>(%AnnotationName%.name, component)
+            if (classInfoAnno != null) {
+                // 这里加工刚刚创建好但是并未进行任何注入的原始组件对象
+            }
+        }
+    }
+    // 组件完成注入与配置
+    completed(objbox: ObjBoxInterface, template: ScannedTemplate, component: any){
+        if (ObjBoxHelper.doesComponentHaveClassAnnotation(%AnnotationName%.name, component)) {
+            let classInfoAnno = ObjBoxHelper.getClassAnnotationFromComponent<%AnnotationName%Arg>(%AnnotationName%.name, component)
+            if (classInfoAnno != null) {
+                // 这里加工完成对象注入的完全组件对象，此时对象还未被任何其他组件引用（现在是第一次）
+            }
+        }
+    }
+    // objbox准备就绪
+    ready(objbox: ObjBoxInterface, template: ScannedTemplate, component: any){
+        if (ObjBoxHelper.doesComponentHaveClassAnnotation(%AnnotationName%.name, component)) {
+            let classInfoAnno = ObjBoxHelper.getClassAnnotationFromComponent<%AnnotationName%Arg>(%AnnotationName%.name, component)
+            if (classInfoAnno != null) {
+                // objbox准备就绪，下一步就是整个框架开始运行
+            }
+        }
     }
 }

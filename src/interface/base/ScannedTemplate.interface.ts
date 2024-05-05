@@ -5,12 +5,12 @@ import { ComponentInterface } from './Component.interface';
 export type Constructor = {
     new(),
     // new(...args:any[]);
-    prototype:ComponentInterface
+    prototype: ComponentInterface
 };
 //普通函数类型
 export type BeanMethod = {
     (),
-    prototype:ComponentInterface
+    prototype: ComponentInterface
 };
 
 /**
@@ -19,10 +19,11 @@ export type BeanMethod = {
  */
 export interface ScannedTemplate {
     componentName: string //组件名称
-    className:string //模板class名称
+    className: string //模板class名称
+    priority: number //同名优先级
     newInstance: Constructor | BeanMethod //创建函数
-    filePath:string //扫描的路径
-    instances:ComponentInterface[] //所有实例引用，单例模式下0为唯一实例
+    filePath: string //扫描的路径
+    instances: ComponentInterface[] //所有实例引用，单例模式下0为唯一实例
     createdType: ComponentCreatedType //创建类型
     originalType: ComponentOriginalType //起源类型
 }

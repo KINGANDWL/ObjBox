@@ -26,9 +26,9 @@ export class ClassAnnotation {
     annotationNameMap: object = {} //Map<string,ClassAnnotationType>
     pushAnnotation<T>(annotationName: string, annotationArgs?: T) {
         if (this.annotationNameMap[annotationName] != null) {
-            if(annotationName == Component.name){
+            if (annotationName == Component.name) {
                 console.log(annotationName + " is repeat in the same class. But that annotation is allowed to be repeat and it will be updated");
-            }else{
+            } else {
                 throw new Error(annotationName + " is repeat in the same class");
             }
         }
@@ -162,7 +162,7 @@ export class MethodArgumentsAnnotation {
  */
 export class Annotations {
     constructor() { }
-    classConstructor:undefined | Constructor
+    classConstructor: undefined | Constructor
     scannedTemplate: ScannedTemplate
     clazz: ClassAnnotation = new ClassAnnotation()
     methods: MethodAnnotation = new MethodAnnotation()
@@ -313,27 +313,31 @@ export function BeanComponent(name: string = null): ClassDecorator {
 export interface BeanAnnotationArgs {
     name: string
     scope: ComponentCreatedType
+    priority: number
 }
 // 在Component中标记方法为bean
-export function Bean(name: string, scope: ComponentCreatedType = ComponentCreatedType.Singleton): MethodDecorator {
+export function Bean(name: string, scope: ComponentCreatedType = ComponentCreatedType.Singleton, priority?: number): MethodDecorator {
     let _annotationName = getFunName(2)
     return function (target: any, key: string, descriptor: PropertyDescriptor) {
-        registerMethod<BeanAnnotationArgs>(_annotationName, { name: name, scope: scope }, target, key, descriptor)
+        priority = Number(priority); priority = isNaN(priority) ? 0 : Math.trunc(priority);
+        registerMethod<BeanAnnotationArgs>(_annotationName, { name: name, scope: scope, priority: priority }, target, key, descriptor)
     }
 }
 
 export interface ComponentAnnotationArgs {
     name: string
     scope: ComponentCreatedType
+    priority: number
 }
 // 标注class为组件
-export function Component(name: string = null, scope: ComponentCreatedType = ComponentCreatedType.Singleton): ClassDecorator {
+export function Component(name: string = null, scope: ComponentCreatedType = ComponentCreatedType.Singleton, priority?: number): ClassDecorator {
     let _annotationName = getFunName(2)
     return function (target: Function): any {
+        priority = Number(priority); priority = isNaN(priority) ? 0 : Math.trunc(priority);
         if (name == null) {
             name = target.name
         }
-        registerClass<ComponentAnnotationArgs>(_annotationName, { name: name, scope: scope }, target)
+        registerClass<ComponentAnnotationArgs>(_annotationName, { name: name, scope: scope, priority: priority }, target)
     }
 }
 
@@ -364,7 +368,7 @@ export function AutowireMethod(target: string | Function, required: boolean = tr
 
 
 
-
+// 元注解（暂时废弃）
 export function Annotation(name: string = null, scope: ComponentCreatedType = ComponentCreatedType.Singleton): ClassDecorator {
     let _annotationName = getFunName(2)
     return function (target: Function): any {

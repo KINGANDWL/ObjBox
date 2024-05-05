@@ -61,7 +61,7 @@ function main() {
     ob.registerFromClass(DefaultComponentHandler)
 
 
-    // 方式1：从文件扫描与注册模板，需要导入fs-extra
+    // 方式1：从文件扫描与注册模板
     // ob.registerFromFiles([
     //     new ScanDir(__dirname + "/src")
     // ])

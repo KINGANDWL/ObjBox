@@ -176,12 +176,13 @@ class ObjBox {
         let prot = fun.prototype;
         let componentAnnotation = prot._annotations_.clazz.getAnnotation(Annotations_1.Component.name);
         let temp = {
-            componentName: componentAnnotation == null ? fun.name : componentAnnotation.annotationArgs.name,
+            componentName: (componentAnnotation == null || componentAnnotation.annotationArgs.name == null) ? fun.name : componentAnnotation.annotationArgs.name,
+            priority: (componentAnnotation == null || componentAnnotation.annotationArgs.priority == null) ? 0 : Math.trunc(componentAnnotation.annotationArgs.priority),
             className: fun.name,
             newInstance: fun,
             filePath: filePath,
             instances: [],
-            createdType: componentAnnotation == null ? Annotations_1.ComponentCreatedType.Singleton : componentAnnotation.annotationArgs.scope,
+            createdType: (componentAnnotation == null || componentAnnotation.annotationArgs.scope == null) ? Annotations_1.ComponentCreatedType.Singleton : componentAnnotation.annotationArgs.scope,
             originalType: Annotations_2.ComponentOriginalType.Component
         };
         return temp;
@@ -289,7 +290,24 @@ class ObjBox {
     trySaveComponentTemplate(sTemplate) {
         if (this.componentScannedTemplates[sTemplate.componentName] != null) {
             let st = this.componentScannedTemplates[sTemplate.componentName];
-            throw new Error(`Component "${sTemplate.componentName}" is repeat between "${st.filePath}"[${st.newInstance.name}] and "${sTemplate.filePath}"[${sTemplate.newInstance.name}]`);
+            if (st.priority == null) {
+                st.priority = 0;
+            }
+            else {
+                st.priority = Math.trunc(Number(st.priority));
+            }
+            if (sTemplate.priority == null) {
+                sTemplate.priority = 0;
+            }
+            else {
+                st.priority = Math.trunc(Number(st.priority));
+            }
+            if (st.priority == sTemplate.priority) {
+                throw new Error(`Component "${sTemplate.componentName}" is repeat between "${st.filePath}"[${st.newInstance.name}] and "${sTemplate.filePath}"[${sTemplate.newInstance.name}]`);
+            }
+            else if (st.priority < sTemplate.priority) {
+                this.componentScannedTemplates[sTemplate.componentName] = sTemplate;
+            }
         }
         else {
             this.componentScannedTemplates[sTemplate.componentName] = sTemplate;
@@ -297,7 +315,24 @@ class ObjBox {
         if (sTemplate.newInstance != null) {
             if (this.componentScannedTemplates_Function.has(sTemplate.newInstance)) {
                 let st = this.componentScannedTemplates_Function.get(sTemplate.newInstance);
-                throw new Error(`Component "${sTemplate.componentName}" is repeat between "${st.filePath}"[${st.newInstance.name}] and "${sTemplate.filePath}"[${sTemplate.newInstance.name}]`);
+                if (st.priority == null) {
+                    st.priority = 0;
+                }
+                else {
+                    st.priority = Math.trunc(Number(st.priority));
+                }
+                if (sTemplate.priority == null) {
+                    sTemplate.priority = 0;
+                }
+                else {
+                    st.priority = Math.trunc(Number(st.priority));
+                }
+                if (st.priority == sTemplate.priority) {
+                    throw new Error(`Component "${sTemplate.componentName}" is repeat between "${st.filePath}"[${st.newInstance.name}] and "${sTemplate.filePath}"[${sTemplate.newInstance.name}]`);
+                }
+                else if (st.priority < sTemplate.priority) {
+                    this.componentScannedTemplates_Function.set(sTemplate.newInstance, sTemplate);
+                }
             }
             else {
                 this.componentScannedTemplates_Function.set(sTemplate.newInstance, sTemplate);
@@ -377,6 +412,7 @@ class ObjBox {
             for (let methodAnnotationType of beanAnnotation) {
                 let temp = {
                     componentName: methodAnnotationType.annotationArgs.name,
+                    priority: methodAnnotationType.annotationArgs.priority,
                     className: "@" + Annotations_1.Bean.name,
                     newInstance: beanComponent[methodAnnotationType.methodName].bind(beanComponent),
                     filePath: beanComponent._annotations_.scannedTemplate.filePath,
@@ -825,49 +861,74 @@ class ObjBox {
      * @param clazz class名称
      * @param name 组件名称
      * @param scope 创建方式
+     * @param priority 优先级，当出现同名组件时，优先级高的覆盖优先级低的
      */
-    registerFromClass(clazz, name, scope) {
+    registerFromClass(clazz, name, scope, priority) {
         let con = clazz;
-        let nameIsNull = false;
+        let argNameIsNull = false, argpriorityIsNull = false;
         if (name == null) {
-            nameIsNull = true;
+            argNameIsNull = true;
             name = con.name;
         }
         if (scope == null)
             scope = Annotations_1.ComponentCreatedType.Singleton;
+        if (priority == null) {
+            argpriorityIsNull = true;
+            priority = 0;
+        }
+        else {
+            priority = Math.trunc(Number(priority));
+        }
         // 普通的未处理的class
         if (!ObjBox.isFunctionTypeofTemplate(con)) {
             con.prototype._annotations_ = new Annotations_1.Annotations();
             con.prototype._preComponents_ = [];
             con.prototype._annotations_.clazz.pushAnnotation(Annotations_1.Component.name, {
                 name: name,
-                scope: scope
+                scope: scope,
+                priority: priority
             });
         }
         else {
             let componentAnno = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.Component.name);
             if (componentAnno != null) {
                 componentAnno.annotationArgs.scope = scope;
-                if (!nameIsNull)
+                if (!argNameIsNull || componentAnno.annotationArgs.name == null)
                     componentAnno.annotationArgs.name = name;
+                if (!argpriorityIsNull || componentAnno.annotationArgs.priority == null)
+                    componentAnno.annotationArgs.priority = priority;
             }
             else {
                 con.prototype._annotations_.clazz.pushAnnotation(Annotations_1.Component.name, {
                     name: name,
-                    scope: scope
+                    scope: scope,
+                    priority: priority
                 });
-                if (!nameIsNull) {
-                    let componentAnno = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.ApplicationHandler.name);
-                    if (componentAnno != null) {
+                let componentAnno = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.ApplicationHandler.name);
+                if (componentAnno != null) {
+                    if (!argNameIsNull) {
                         componentAnno.annotationArgs.name = name;
                     }
-                    let componentAnno2 = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.ComponentHandler.name);
-                    if (componentAnno2 != null) {
+                    if (componentAnno.annotationArgs.name == null) {
+                        throw new Error(`the name of ApplicationHandler is undefined`);
+                    }
+                }
+                let componentAnno2 = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.ComponentHandler.name);
+                if (componentAnno2 != null) {
+                    if (!argNameIsNull) {
                         componentAnno2.annotationArgs.name = name;
                     }
-                    let componentAnno3 = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.BeanComponent.name);
-                    if (componentAnno3 != null) {
+                    if (componentAnno2.annotationArgs.name == null) {
+                        throw new Error(`the name of ComponentHandler is undefined`);
+                    }
+                }
+                let componentAnno3 = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.BeanComponent.name);
+                if (componentAnno3 != null) {
+                    if (!argNameIsNull) {
                         componentAnno3.annotationArgs.name = name;
+                    }
+                    if (componentAnno3.annotationArgs.name == null) {
+                        throw new Error(`the name of BeanComponent is undefined`);
                     }
                 }
             }
@@ -879,14 +940,18 @@ class ObjBox {
      * @param method 能够创建对象的函数
      * @param name 组件名称
      * @param scope 创建方式
+     * @param priority 优先级，当出现同名组件时，优先级高的覆盖优先级低的
      */
-    registerFromMethod(method, name, scope) {
+    registerFromMethod(method, name, scope, priority) {
         if (name == null)
             name = method.name;
         if (scope == null)
             scope = Annotations_1.ComponentCreatedType.Singleton;
+        priority = Number(priority);
+        priority = isNaN(priority) ? 0 : Math.trunc(priority);
         let temp = {
             componentName: name,
+            priority: priority,
             className: "@" + Annotations_1.Bean.name,
             newInstance: method,
             filePath: "#registerFromMethod",
@@ -900,23 +965,34 @@ class ObjBox {
      * 直接将对象注入到容器
      * @param obj 任意obj对象
      * @param name 组件名称
+     * @param priority 优先级，当出现同名组件时，优先级高的覆盖优先级低的
      */
-    registerByObject(obj, name, scope) {
+    registerByObject(obj, name, scope, priority) {
         if (ObjBox.isObjectTypeofComponent(obj)) {
             // 如果对象内部存储着类信息
             let componentObj = obj;
             if (componentObj._annotations_.classConstructor != null) {
                 let con = componentObj._annotations_.classConstructor;
-                this.registerFromClass(con, name, scope == null ? Annotations_1.ComponentCreatedType.Singleton : scope);
+                this.registerFromClass(con, name, scope == null ? Annotations_1.ComponentCreatedType.Singleton : scope, priority);
                 this.componentScannedTemplates[name].instances = [obj];
                 return;
             }
         }
-        else {
-            this.registerFromMethod(function () {
-                return obj;
-            }, name, scope == null ? Annotations_1.ComponentCreatedType.Singleton : scope);
-        }
+        if (name == null)
+            name = "annoymous"; //不可能为null，以防万一
+        priority = Number(priority);
+        priority = isNaN(priority) ? 0 : Math.trunc(priority);
+        let temp = {
+            componentName: name,
+            priority: priority,
+            className: "@" + Annotations_1.Bean.name,
+            newInstance: function () { return obj; },
+            filePath: "#registerByObject",
+            instances: [],
+            createdType: Annotations_1.ComponentCreatedType.Singleton,
+            originalType: Annotations_2.ComponentOriginalType.Bean
+        };
+        this.trySaveComponentTemplate(temp);
     }
     /**
      * 开始装载所有注册模板

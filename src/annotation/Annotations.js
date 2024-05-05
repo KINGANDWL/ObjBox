@@ -239,21 +239,25 @@ function BeanComponent(name = null) {
 }
 exports.BeanComponent = BeanComponent;
 // 在Component中标记方法为bean
-function Bean(name, scope = ComponentCreatedType.Singleton) {
+function Bean(name, scope = ComponentCreatedType.Singleton, priority) {
     let _annotationName = getFunName(2);
     return function (target, key, descriptor) {
-        registerMethod(_annotationName, { name: name, scope: scope }, target, key, descriptor);
+        priority = Number(priority);
+        priority = isNaN(priority) ? 0 : Math.trunc(priority);
+        registerMethod(_annotationName, { name: name, scope: scope, priority: priority }, target, key, descriptor);
     };
 }
 exports.Bean = Bean;
 // 标注class为组件
-function Component(name = null, scope = ComponentCreatedType.Singleton) {
+function Component(name = null, scope = ComponentCreatedType.Singleton, priority) {
     let _annotationName = getFunName(2);
     return function (target) {
+        priority = Number(priority);
+        priority = isNaN(priority) ? 0 : Math.trunc(priority);
         if (name == null) {
             name = target.name;
         }
-        registerClass(_annotationName, { name: name, scope: scope }, target);
+        registerClass(_annotationName, { name: name, scope: scope, priority: priority }, target);
     };
 }
 exports.Component = Component;
@@ -273,6 +277,7 @@ function AutowireMethod(target, required = true) {
     };
 }
 exports.AutowireMethod = AutowireMethod;
+// 元注解（暂时废弃）
 function Annotation(name = null, scope = ComponentCreatedType.Singleton) {
     let _annotationName = getFunName(2);
     return function (target) {
