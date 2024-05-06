@@ -91,8 +91,10 @@ class ObjBoxHelper {
      */
     static doesTemplateHaveClassAnnotation(annotationName, template) {
         if (template != null && annotationName != null) {
-            if (template.originalType == Annotations_1.ComponentOriginalType.Component) {
-                return template.newInstance.prototype._annotations_.clazz.getAnnotation(annotationName) != null;
+            if (template.originalType != null) {
+                if (template.newInstance.prototype._annotations_ != null) {
+                    return template.newInstance.prototype._annotations_.clazz.getAnnotation(annotationName) != null;
+                }
             }
         }
         return false;
@@ -196,9 +198,11 @@ class ObjBoxHelper {
     static getClassAnnotationFromTemplate(annotationName, template) {
         if (template != null) {
             let prot = template.newInstance.prototype;
-            let anno = prot._annotations_.clazz.getAnnotation(annotationName);
-            if (anno != null) {
-                return anno.annotationArgs;
+            if (prot._annotations_ != null) {
+                let anno = prot._annotations_.clazz.getAnnotation(annotationName);
+                if (anno != null) {
+                    return anno.annotationArgs;
+                }
             }
         }
         return null;
@@ -211,9 +215,11 @@ class ObjBoxHelper {
     static getMethodsAnnotationFromTemplate(annotationName, template) {
         if (template != null) {
             let prot = template.newInstance.prototype;
-            let mats = prot._annotations_.methods.getAnnotationsByName(annotationName);
-            if (mats != null) {
-                return mats;
+            if (prot._annotations_ != null) {
+                let mats = prot._annotations_.methods.getAnnotationsByName(annotationName);
+                if (mats != null) {
+                    return mats;
+                }
             }
         }
         return [];
@@ -226,9 +232,11 @@ class ObjBoxHelper {
     static getPropertyAnnotationFromTemplate(annotationName, template) {
         if (template != null) {
             let prot = template.newInstance.prototype;
-            let pats = prot._annotations_.property.getAnnotationByName(annotationName);
-            if (pats != null) {
-                return pats;
+            if (prot._annotations_ != null) {
+                let pats = prot._annotations_.property.getAnnotationByName(annotationName);
+                if (pats != null) {
+                    return pats;
+                }
             }
         }
         return [];
@@ -241,9 +249,11 @@ class ObjBoxHelper {
     static getMethodArgsAnnotationFromTemplate(annotationName, template) {
         if (template != null) {
             let prot = template.newInstance.prototype;
-            let maats = prot._annotations_.methodArguments.getAnnotationByName(annotationName);
-            if (maats != null) {
-                return maats;
+            if (prot._annotations_ != null) {
+                let maats = prot._annotations_.methodArguments.getAnnotationByName(annotationName);
+                if (maats != null) {
+                    return maats;
+                }
             }
         }
         return [];
