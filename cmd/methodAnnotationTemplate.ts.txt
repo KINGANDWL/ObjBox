@@ -17,13 +17,13 @@ export interface %AnnotationName%Arg {
  * @param yourArg1 
  * @param yourArg2 
  */
-export function %AnnotationName%(yourArg1: any, yourArg2: any): MethodDecorator {
+export function %AnnotationName%(options:%AnnotationName%Arg): MethodDecorator {
     //获取当前函数名称，等效于let _annotationName = "%AnnotationName%"
     let _annotationName = getFunName(2)
 
     //@ts-ignore
     return function (target: any, key: string, descriptor: PropertyDescriptor) {
-        registerMethod<%AnnotationName%Arg>(_annotationName, { yourArg1, yourArg2 }, target, key, descriptor)
+        registerMethod<%AnnotationName%Arg>(_annotationName, options, target, key, descriptor)
     }
 }
 
