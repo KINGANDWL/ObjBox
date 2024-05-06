@@ -38,21 +38,21 @@ export class %AnnotationName%AnnotationHandler implements ComponentHandlerInterf
         }
     }
     // 组件刚创建完成
-    created(objbox: ObjBoxInterface, template: ScannedTemplate, component: any) {
+    afterCreated(objbox: ObjBoxInterface, template: ScannedTemplate, component: any) {
         let methodInfoAnno = ObjBoxHelper.getPropertyAnnotationFromComponent<%AnnotationName%Arg>(%AnnotationName%.name, component);
         if (methodInfoAnno.length > 0) {
             // 这里加工刚刚创建好但是并未进行任何注入的原始组件对象
         }
     }
     // 组件完成注入与配置
-    completed(objbox: ObjBoxInterface, template: ScannedTemplate, component: any) {
+    afterCompleted(objbox: ObjBoxInterface, template: ScannedTemplate, component: any) {
         let methodInfoAnno = ObjBoxHelper.getPropertyAnnotationFromComponent<%AnnotationName%Arg>(%AnnotationName%.name, component);
         if (methodInfoAnno.length > 0) {
             // 这里加工完成对象注入的完全组件对象，此时对象还未被任何其他组件引用（现在是第一次）
         }
     }
     // objbox准备就绪
-    ready(objbox: ObjBoxInterface, template: ScannedTemplate, component: any) {
+    beforeReady(objbox: ObjBoxInterface, template: ScannedTemplate, component: any) {
         let methodInfoAnno = ObjBoxHelper.getPropertyAnnotationFromComponent<%AnnotationName%Arg>(%AnnotationName%.name, component);
         if (methodInfoAnno.length > 0) {
             // objbox准备就绪，下一步就是整个框架开始运行

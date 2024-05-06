@@ -42,7 +42,7 @@ if (args.length <= 2) {
             fs.writeFile(
                 path,
                 txt.toString().replace(/%AnnotationName%/g, name),
-                { flag: "a", },
+                { flag: "a" },
                 function () {
                     console.log(`Successfully ! Annotation "@${name}" is in ${fs.realpathSync(path)}`)
                 }

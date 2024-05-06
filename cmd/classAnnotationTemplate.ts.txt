@@ -41,7 +41,7 @@ export class %AnnotationName%AnnotationHandler implements ComponentHandlerInterf
         }
     }
     // 组件刚创建完成
-    created(objbox: ObjBoxInterface, template: ScannedTemplate, component: any){
+    afterCreated(objbox: ObjBoxInterface, template: ScannedTemplate, component: any){
         if (ObjBoxHelper.doesComponentHaveClassAnnotation(%AnnotationName%.name, component)) {
             let classInfoAnno = ObjBoxHelper.getClassAnnotationFromComponent<%AnnotationName%Arg>(%AnnotationName%.name, component)
             if (classInfoAnno != null) {
@@ -50,7 +50,7 @@ export class %AnnotationName%AnnotationHandler implements ComponentHandlerInterf
         }
     }
     // 组件完成注入与配置
-    completed(objbox: ObjBoxInterface, template: ScannedTemplate, component: any){
+    afterCompleted(objbox: ObjBoxInterface, template: ScannedTemplate, component: any){
         if (ObjBoxHelper.doesComponentHaveClassAnnotation(%AnnotationName%.name, component)) {
             let classInfoAnno = ObjBoxHelper.getClassAnnotationFromComponent<%AnnotationName%Arg>(%AnnotationName%.name, component)
             if (classInfoAnno != null) {
@@ -59,7 +59,7 @@ export class %AnnotationName%AnnotationHandler implements ComponentHandlerInterf
         }
     }
     // objbox准备就绪
-    ready(objbox: ObjBoxInterface, template: ScannedTemplate, component: any){
+    beforeReady(objbox: ObjBoxInterface, template: ScannedTemplate, component: any){
         if (ObjBoxHelper.doesComponentHaveClassAnnotation(%AnnotationName%.name, component)) {
             let classInfoAnno = ObjBoxHelper.getClassAnnotationFromComponent<%AnnotationName%Arg>(%AnnotationName%.name, component)
             if (classInfoAnno != null) {

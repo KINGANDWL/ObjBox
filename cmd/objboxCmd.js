@@ -31,7 +31,7 @@ else {
             if (last > 0 && !fs.existsSync(dir)) {
                 fs.mkdirSync(dir);
             }
-            fs.writeFile(path_1, txt.toString().replace(/%AnnotationName%/g, name_1), { flag: "a", }, function () {
+            fs.writeFile(path_1, txt.toString().replace(/%AnnotationName%/g, name_1), { flag: "a" }, function () {
                 console.log("Successfully ! Annotation \"@".concat(name_1, "\" is in ").concat(fs.realpathSync(path_1)));
             });
         }
