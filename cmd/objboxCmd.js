@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 var fs = require("fs");
 var args = [];
 for (var i = 2; i < process.argv.length; i++) {
@@ -21,7 +21,7 @@ else {
             "anno-class": "/classAnnotationTemplate.ts.txt",
             "anno-property": "/propertyAnnotationTemplate.ts.txt",
             "anno-method": "/methodAnnotationTemplate.ts.txt",
-            "anno-methodArg": "/paramaterAnnotationTemplate.ts.txt"
+            "anno-methodarg": "/paramaterAnnotationTemplate.ts.txt",
         };
         if (templateFile[operation] != null) {
             var txt = fs.readFileSync(__dirname + templateFile[operation]);
@@ -31,7 +31,7 @@ else {
             if (last > 0 && !fs.existsSync(dir)) {
                 fs.mkdirSync(dir);
             }
-            fs.writeFile(path_1, txt.toString().replace(/%AnnotationName%/g, name_1), { flag: "a" }, function () {
+            fs.writeFile(path_1, txt.toString().replace(/%AnnotationName%/g, name_1), { flag: "a", }, function () {
                 console.log("Successfully ! Annotation \"@".concat(name_1, "\" is in ").concat(fs.realpathSync(path_1)));
             });
         }

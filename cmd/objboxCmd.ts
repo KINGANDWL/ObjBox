@@ -29,7 +29,7 @@ if (args.length <= 2) {
             "anno-class": "/classAnnotationTemplate.ts.txt",
             "anno-property": "/propertyAnnotationTemplate.ts.txt",
             "anno-method": "/methodAnnotationTemplate.ts.txt",
-            "anno-methodArg": "/paramaterAnnotationTemplate.ts.txt",
+            "anno-methodarg": "/paramaterAnnotationTemplate.ts.txt",
         }
 
         if (templateFile[operation] != null) {
