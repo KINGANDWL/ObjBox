@@ -3,7 +3,8 @@
 
 
 [github](https://github.com/kingandwl/objbox) or [npmjs](https://www.npmjs.com/package/objbox)
-
+每个中版本的最后一个版本都是正式版，其余为测试版，例如有如下版本 1.2.1、1.2.2、1.2.3、1.3.1、1.3.2 ，其中只有1.2.3是正式版
+小版本号表示bug修复，中版本表示有重要特性增加
 
 
 # 简述

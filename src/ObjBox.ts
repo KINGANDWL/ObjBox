@@ -321,14 +321,14 @@ export class ObjBox implements ObjBoxInterface {
 
             if (st.priority == sTemplate.priority) {
                 throw new Error(`Component "${sTemplate.componentName}" is repeat between "${st.filePath}"[${st.newInstance.name}] and "${sTemplate.filePath}"[${sTemplate.newInstance.name}]`);
-            } else if(st.priority < sTemplate.priority){
+            } else if (st.priority < sTemplate.priority) {
                 this.componentScannedTemplates[sTemplate.componentName] = sTemplate;
             }
         } else {
             this.componentScannedTemplates[sTemplate.componentName] = sTemplate;
         }
 
-        
+
         if (sTemplate.newInstance != null) {
             if (this.componentScannedTemplates_Function.has(sTemplate.newInstance)) {
                 let st: ScannedTemplate = this.componentScannedTemplates_Function.get(sTemplate.newInstance);
@@ -346,7 +346,7 @@ export class ObjBox implements ObjBoxInterface {
 
                 if (st.priority == sTemplate.priority) {
                     throw new Error(`Component "${sTemplate.componentName}" is repeat between "${st.filePath}"[${st.newInstance.name}] and "${sTemplate.filePath}"[${sTemplate.newInstance.name}]`);
-                } else if(st.priority < sTemplate.priority) {
+                } else if (st.priority < sTemplate.priority) {
                     this.componentScannedTemplates_Function.set(sTemplate.newInstance, sTemplate);
                 }
             } else {
@@ -846,8 +846,12 @@ export class ObjBox implements ObjBoxInterface {
      * 准备组件
      * @param sTemplates 
      */
-    private prepareComponents() {
-        let sTemplates = this.getAllComponentTemplate();
+    private prepareComponents_WhenLoading() {
+        let sTemplates = this.getAllComponentTemplate().filter((each)=>{
+            let isLoaded = each.isloaded === true;
+            if(!isLoaded){each.isloaded = true};
+            return !isLoaded;
+        });
         for (let sTemplate of sTemplates) {
             if (ObjBox.hasComponentAnnotation(sTemplate) || ObjBox.isBeanAnnotation(sTemplate)) {
                 let com = this.getComponent(sTemplate.componentName);
@@ -1037,16 +1041,20 @@ export class ObjBox implements ObjBoxInterface {
 
 
 
+
     /**
      * 开始装载所有注册模板
+     * 在run之后如果再register新的组件，对ApplicationHandler来说将不再触发某些事件（如start、BeforePrepare、AfterPrepare）
      */
     load() {
         // 6、对所有模板触发 @ApplicationHandler 的 start(objBox)
-        this.executeApplicationHandler_start()
+        if (this.status.running === false) {
+            this.executeApplicationHandler_start();
+        }
 
         //7、对所有模板触发 @ApplicationHandler 的 preprocessScannedTemplate(objbox,sTemplates[])
-        let allSTemplate = this.getAllComponentTemplate();
-        this.executeApplicationHandler_preprocessScannedTemplate(allSTemplate)
+        let allSTemplate = this.getAllComponentTemplate().filter((each) => { return each.isloaded !== true; });//过滤被加载过的模板
+        this.executeApplicationHandler_preprocessScannedTemplate(allSTemplate);
 
         // 8、校验模板是否为 @ComponentHandler 实例化并存储
         for (let sTemplate of allSTemplate) {
@@ -1062,30 +1070,38 @@ export class ObjBox implements ObjBoxInterface {
             }
         }
         let allBeanTempaltes: ScannedTemplate[] = []
-        let allBeanComponent = this.getAllBeanComponent();
+        let allBeanComponent = this.getAllBeanComponent().filter((each) => {
+            let isLoaded = each._annotations_.scannedTemplate.isloaded === true;
+            if (!isLoaded) { each._annotations_.scannedTemplate.isloaded = true; }
+            return !isLoaded;
+        });
         for (let bc of allBeanComponent) {
             let beanTemplates: ScannedTemplate[] = ObjBox.createBeanTemplatesFromBeanComponent(bc);
-            allBeanTempaltes = allBeanTempaltes.concat(beanTemplates)
+            allBeanTempaltes = allBeanTempaltes.concat(beanTemplates);
             for (let eachBT of beanTemplates) {
-                this.trySaveComponentTemplate(eachBT)
+                this.trySaveComponentTemplate(eachBT);
             }
         }
 
         // 10、对新建的 @bean 模板触发 @ApplicationHandler 的 preprocessScannedTemplate(objbox,sTemplates[])
-        this.executeApplicationHandler_preprocessScannedTemplate(allBeanTempaltes)
+        this.executeApplicationHandler_preprocessScannedTemplate(allBeanTempaltes);
 
         // 11、对所有模板触发 @ComponentHandler 的 scaned(objbox,name,sTemplate)
-        allSTemplate = this.getAllComponentTemplate();
-        for (let sTemplate of allSTemplate) {
-            this.executeComponentHandler_scanned(sTemplate)
+        let allSTemplate2 = this.getAllComponentTemplate().filter((each) => { return each.isloaded !== true });
+        for (let sTemplate of allSTemplate2) {
+            this.executeComponentHandler_scanned(sTemplate);
         }
 
         // 12、触发应用处理器 @ApplicationHandler 的 processBeforePrepare(objbox)
-        this.executeApplicationHandler_BeforePrepare()
+        if (this.status.running === false) {
+            this.executeApplicationHandler_BeforePrepare();
+        }
         // 13、对所有模板创建第一个实例组件并进行依赖注入
-        this.prepareComponents();
+        this.prepareComponents_WhenLoading();
         // 14、触发应用处理器 @ApplicationHandler 的 processAfterPrepare(objbox)
-        this.executeApplicationHandler_AfterPrepare()
+        if (this.status.running === false) {
+            this.executeApplicationHandler_AfterPrepare();
+        }
     }
 
 
@@ -1094,7 +1110,7 @@ export class ObjBox implements ObjBoxInterface {
      * 启动应用
      */
     run() {
-        if (this.status.running == false) {
+        if (this.status.running === false) {
             // 15.1、触发 @ApplicationHandler 的 beforeRunning(objbox)
             this.executeApplicationHandler_beforeRunning()
 
