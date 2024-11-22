@@ -10,3 +10,4 @@ export function ComponentScan(path:string): ClassDecorator {
         registerClass(_annotationName, { path:path }, target)
     }
 }
+Object.defineProperty(ComponentScan, "name", { value: "ComponentScan" });

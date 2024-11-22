@@ -5,25 +5,32 @@ import {
     ObjBoxInterface, ScannedTemplate 
 } from "objbox"
 
+
+
 //自定义class注解%AnnotationName%的参数
 export interface %AnnotationName%Arg{
     yourArg1: any //注解参数1
     yourArg2: any //注解参数2
 }
+
+
 /**
  * 自定义class注解：%AnnotationName%
  * @param yourArg1 
  * @param yourArg2 
  */
 export function %AnnotationName% (options:%AnnotationName%Arg): ClassDecorator {
-    //获取当前函数名称，等效于let _annotationName = "%AnnotationName%"
-    let _annotationName = getFunName(2)
+    //利用异常栈信息获取当前函数名称，等效于let _annotationName = "%AnnotationName%"，之所以不用字符串常量是防止将函数名称修改之后忘记修改字符串常量（防呆）
+    let _annotationName = getFunName(2);
+    
     return function (target: Function): any {
         // 如果你希望这个注解能够直接成为组件注解被objbox自动管理，就手动给当前注解手动添加注册
         // registerClass(Component.name, { name: target.name, scope: ComponentCreatedType.Singleton }, target)
         registerClass<%AnnotationName%Arg>(_annotationName, options, target)
     }
 }
+// 防止ts编译优化将函数名称擦除
+Object.defineProperty(%AnnotationName%, "name", { value: "%AnnotationName%" });
 
 
 /**

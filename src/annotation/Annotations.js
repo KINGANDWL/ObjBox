@@ -288,3 +288,12 @@ function Annotation(name = null, scope = ComponentCreatedType.Singleton) {
     };
 }
 exports.Annotation = Annotation;
+// 防止ts优化把函数名称擦除
+Object.defineProperty(ApplicationHandler, "name", { value: "ApplicationHandler" });
+Object.defineProperty(ComponentHandler, "name", { value: "ComponentHandler" });
+Object.defineProperty(BeanComponent, "name", { value: "BeanComponent" });
+Object.defineProperty(Bean, "name", { value: "Bean" });
+Object.defineProperty(Component, "name", { value: "Component" });
+Object.defineProperty(AutowireProperty, "name", { value: "AutowireProperty" });
+Object.defineProperty(AutowireMethod, "name", { value: "AutowireMethod" });
+Object.defineProperty(Annotation, "name", { value: "Annotation" });

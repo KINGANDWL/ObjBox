@@ -9,3 +9,4 @@ function ComponentScan(path) {
     };
 }
 exports.ComponentScan = ComponentScan;
+Object.defineProperty(ComponentScan, "name", { value: "ComponentScan" });
