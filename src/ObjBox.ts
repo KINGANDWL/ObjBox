@@ -488,11 +488,11 @@ export class ObjBox implements ObjBoxInterface {
             }
         }
     }
-    private executeComponentHandler_beforeCreated(sTemplate: ScannedTemplate, component: ComponentInterface) {
+    private executeComponentHandler_beforeCreated(sTemplate: ScannedTemplate) {
         let allCH = this.getAllComponentHandler();
         for (let ch of allCH) {
             if (ch.beforeCreated != null) {
-                ch.beforeCreated(this, sTemplate, component);
+                ch.beforeCreated(this, sTemplate);
             }
         }
     }
@@ -746,13 +746,13 @@ export class ObjBox implements ObjBoxInterface {
                 // 13.2 从缓存获取；如果缓存没有，新建
                 component = this.getComponentFromTempPool(target);
                 if (component == null) {
-                    // 13.3、新建 @Component 组件 ObjBox.createComponentFromTemplate(sTemplate)
-                    component = ObjBox.createComponentFromTemplate(scannedTemplate)
+                    // 13.3、触发 @ComponentHandler 的 beforeCreated(objbox,sTemplate,component)
+                    this.executeComponentHandler_beforeCreated(scannedTemplate);
+                    // 13.4、新建 @Component 组件 ObjBox.createComponentFromTemplate(sTemplate)
+                    component = ObjBox.createComponentFromTemplate(scannedTemplate);
                     if (component != null) {
-                        this.saveComponentToLevelTwo(scannedTemplate.componentName, scannedTemplate.newInstance, component) //实例存入缓存
+                        this.saveComponentToLevelTwo(scannedTemplate.componentName, scannedTemplate.newInstance, component); //实例存入缓存
 
-                        // 13.4、触发 @ComponentHandler 的 beforeCreated(objbox,sTemplate,component)
-                        this.executeComponentHandler_beforeCreated(scannedTemplate, component);
                         // 13.5、触发 @TemplateHandler 的 created
                         this.executeTemplateHandler_created(component);
                         // 13.6、触发 @ComponentHandler 的 afterCreated(objbox,sTemplate,component)
@@ -778,6 +778,8 @@ export class ObjBox implements ObjBoxInterface {
                             // 13.11.3、触发 @ComponentHandler 的 beforeReady(objbox,sTemplate,component)
                             this.executeComponentHandler_afterReady(scannedTemplate, component);
                         }
+                    }else{
+                        throw new Error(`Cannot create component "${scannedTemplate.componentName}"`);
                     }
                 }
             }
@@ -1204,8 +1206,8 @@ export class ObjBox implements ObjBoxInterface {
     13、对所有模板创建第一个实例组件并进行依赖注入
           13.1、从模板单例实例化处获取实例，如果没有去缓存取
           13.2、如果缓存没有，新建
-            13.3、新建 @Component 组件 ObjBox.createComponentFromTemplate(sTemplate)
-            13.4、触发 @ComponentHandler 的 beforeCreated(objbox,sTemplate,component)
+            13.3、触发 @ComponentHandler 的 beforeCreated(objbox,sTemplate)
+            13.4、新建 @Component 组件 ObjBox.createComponentFromTemplate(sTemplate)
             13.5、触发 @TemplateHandler 的 created
             13.6、触发 @ComponentHandler 的 afterCreated(objbox,sTemplate,component)
             13.7、依赖注入 @Component 组件 objbox.injectComponentDependency(component)

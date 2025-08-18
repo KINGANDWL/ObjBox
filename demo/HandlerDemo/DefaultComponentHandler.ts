@@ -18,7 +18,7 @@ export class DefaultComponentHandler implements ComponentHandlerInterface {
         this.logger.info(`scanned: [${template.componentName}] ${path}`)
 
     }
-    beforeCreated(objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface) {
+    beforeCreated(objbox: ObjBoxInterface, template: ScannedTemplate) {
         this.logger.info(`beforeCreated: [${template.componentName}]`)
     }
     afterCreated(objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface) {

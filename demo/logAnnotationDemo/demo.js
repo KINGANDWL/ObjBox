@@ -27,7 +27,7 @@ function Log() {
 }
 exports.Log = Log;
 let LogHandler = class LogHandler {
-    beforeCreated(objbox, template, component) {
+    afterCreated(objbox, template, component) {
         let methodAnnos = __1.ObjBoxHelper.getMethodsAnnotationFromComponent(Log.name, component);
         for (let methodAnno of methodAnnos) {
             __1.ObjBoxHelper.insertFunctionBeforeMethod(component, methodAnno.methodName, (...args) => {

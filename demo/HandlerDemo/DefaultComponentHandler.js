@@ -25,7 +25,7 @@ let DefaultComponentHandler = DefaultComponentHandler_1 = class DefaultComponent
         }
         this.logger.info(`scanned: [${template.componentName}] ${path}`);
     }
-    beforeCreated(objbox, template, component) {
+    beforeCreated(objbox, template) {
         this.logger.info(`beforeCreated: [${template.componentName}]`);
     }
     afterCreated(objbox, template, component) {
