@@ -13,6 +13,11 @@ try {
 catch (err) {
     console.warn(`Cannot find "fs" moddule. And maybe the objbox is running in browser.`);
 }
+const DefaultFilepath = {
+    RegisterFromClass: "#registerFromClass",
+    RegisterFromMethod: "#registerFromMethod",
+    RegisterByObject: "#registerByObject",
+};
 class ObjBox {
     // private static fs_extra: any = null
     constructor(loggerConfig) {
@@ -183,7 +188,7 @@ class ObjBox {
             filePath: filePath,
             instances: [],
             createdType: (componentAnnotation == null || componentAnnotation.annotationArgs.scope == null) ? Annotations_1.ComponentCreatedType.Singleton : componentAnnotation.annotationArgs.scope,
-            originalType: Annotations_2.ComponentOriginalType.Component
+            originalType: filePath == DefaultFilepath.RegisterFromClass ? Annotations_2.ComponentOriginalType.FromClass : Annotations_2.ComponentOriginalType.FromFiles,
         };
         return temp;
     }
@@ -413,12 +418,12 @@ class ObjBox {
                 let temp = {
                     componentName: methodAnnotationType.annotationArgs.name,
                     priority: methodAnnotationType.annotationArgs.priority,
-                    className: "@" + Annotations_1.Bean.name,
+                    className: DefaultFilepath.RegisterFromMethod,
                     newInstance: beanComponent[methodAnnotationType.methodName].bind(beanComponent),
                     filePath: beanComponent._annotations_.scannedTemplate.filePath,
                     instances: [],
                     createdType: methodAnnotationType.annotationArgs.scope,
-                    originalType: Annotations_2.ComponentOriginalType.Bean
+                    originalType: Annotations_2.ComponentOriginalType.FromMethod
                 };
                 result.push(temp);
             }
@@ -433,10 +438,10 @@ class ObjBox {
         let result = null;
         if (sTemplate != null) {
             if (sTemplate.instances == null || sTemplate.instances.length <= 0 || sTemplate.createdType == Annotations_1.ComponentCreatedType.Factory) {
-                if (sTemplate.originalType == Annotations_2.ComponentOriginalType.Component) {
+                if (sTemplate.originalType == Annotations_2.ComponentOriginalType.FromFiles || sTemplate.originalType == Annotations_2.ComponentOriginalType.FromClass) {
                     result = new sTemplate.newInstance();
                 }
-                else if (sTemplate.originalType == Annotations_2.ComponentOriginalType.Bean) {
+                else if (sTemplate.originalType == Annotations_2.ComponentOriginalType.FromMethod || sTemplate.originalType == Annotations_2.ComponentOriginalType.ByObject) {
                     result = sTemplate.newInstance();
                 }
                 if (sTemplate.instances == null) {
@@ -694,9 +699,6 @@ class ObjBox {
         }
         return false;
     }
-    static isBeanAnnotation(sTemplate) {
-        return sTemplate != null && sTemplate.originalType != null && sTemplate.originalType == Annotations_2.ComponentOriginalType.Bean;
-    }
     /**
      * 遵循组件创建方式，通过名称获取组件
      * @param target
@@ -714,7 +716,7 @@ class ObjBox {
                 // 13.2 从缓存获取；如果缓存没有，新建
                 component = this.getComponentFromTempPool(target);
                 if (component == null) {
-                    // 13.3、触发 @ComponentHandler 的 beforeCreated(objbox,sTemplate,component)
+                    // 13.3、触发 @ComponentHandler 的 beforeCreated(objbox,sTemplate)
                     this.executeComponentHandler_beforeCreated(scannedTemplate);
                     // 13.4、新建 @Component 组件 ObjBox.createComponentFromTemplate(sTemplate)
                     component = ObjBox.createComponentFromTemplate(scannedTemplate);
@@ -777,14 +779,12 @@ class ObjBox {
         let components = [];
         let sTemplates = this.getAllComponentTemplate();
         for (let sTemplate of sTemplates) {
-            if (ObjBox.hasComponentAnnotation(sTemplate) || ObjBox.isBeanAnnotation(sTemplate)) {
-                let com = this.getComponent(sTemplate.componentName);
-                if (com == null) {
-                    throw new Error(`Cannot find component "${sTemplate.componentName}"`);
-                }
-                else {
-                    components.push(com);
-                }
+            let com = this.getComponent(sTemplate.componentName);
+            if (com == null) {
+                throw new Error(`Cannot find component "${sTemplate.componentName}"`);
+            }
+            else {
+                components.push(com);
             }
         }
         return components;
@@ -796,14 +796,12 @@ class ObjBox {
         let components = [];
         let sTemplates = this.getAllComponentTemplate();
         for (let sTemplate of sTemplates) {
-            if (ObjBox.hasComponentAnnotation(sTemplate) || ObjBox.isBeanAnnotation(sTemplate)) {
-                for (let ins of sTemplate.instances) {
-                    if (ins == null) {
-                        throw new Error(`Cannot find component "${sTemplate.componentName}"`);
-                    }
-                    else {
-                        components.push(ins);
-                    }
+            for (let ins of sTemplate.instances) {
+                if (ins == null) {
+                    throw new Error(`Cannot find component "${sTemplate.componentName}"`);
+                }
+                else {
+                    components.push(ins);
                 }
             }
         }
@@ -823,11 +821,9 @@ class ObjBox {
             return !isLoaded;
         });
         for (let sTemplate of sTemplates) {
-            if (ObjBox.hasComponentAnnotation(sTemplate) || ObjBox.isBeanAnnotation(sTemplate)) {
-                let com = this.getComponent(sTemplate.componentName);
-                if (com == null) {
-                    throw new Error(`Cannot find component "${sTemplate.componentName}"`);
-                }
+            let com = this.getComponent(sTemplate.componentName);
+            if (com == null) {
+                throw new Error(`Cannot find component "${sTemplate.componentName}"`);
             }
         }
     }
@@ -843,6 +839,7 @@ class ObjBox {
             let sTemplate = ObjBox.createComponentTemplatesFromFunctions(clazz, filepath);
             // 4、校验模板是否为ApplicationHandler实例化并存储
             if (ObjBox.isTemplateTypeofApplicationHandler(sTemplate)) {
+                // 保险起见，ApplicationHandler只能通过class进行注册
                 this.trySaveApplicationHandler(sTemplate);
             }
             // 5、存储所有组件模板（如果ApplicationHandler被标注为Component，会成为单例组件）
@@ -891,13 +888,8 @@ class ObjBox {
         }
         // 普通的未处理的class
         if (!ObjBox.isFunctionTypeofTemplate(con)) {
-            con.prototype._annotations_ = new Annotations_1.Annotations();
-            con.prototype._preComponents_ = [];
-            con.prototype._annotations_.clazz.pushAnnotation(Annotations_1.Component.name, {
-                name: name,
-                scope: scope,
-                priority: priority
-            });
+            // 初始化annotations
+            (0, Annotations_1.registerClass)(Annotations_1.Component.name, { name: name, scope: scope, priority: priority }, con);
         }
         else {
             let componentAnno = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.Component.name);
@@ -909,41 +901,48 @@ class ObjBox {
                     componentAnno.annotationArgs.priority = priority;
             }
             else {
+                // 优先使用传入参数
                 con.prototype._annotations_.clazz.pushAnnotation(Annotations_1.Component.name, {
                     name: name,
                     scope: scope,
                     priority: priority
                 });
-                let componentAnno = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.ApplicationHandler.name);
-                if (componentAnno != null) {
-                    if (!argNameIsNull) {
-                        componentAnno.annotationArgs.name = name;
-                    }
-                    if (componentAnno.annotationArgs.name == null) {
-                        throw new Error(`the name of ApplicationHandler is undefined`);
+                let componentAnno1 = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.ApplicationHandler.name);
+                if (componentAnno1 != null) {
+                    if (componentAnno1.annotationArgs.name == null) {
+                        if (!argNameIsNull) {
+                            componentAnno1.annotationArgs.name = name;
+                        }
+                        else {
+                            throw new Error(`the name of ApplicationHandler is undefined`);
+                        }
                     }
                 }
                 let componentAnno2 = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.ComponentHandler.name);
                 if (componentAnno2 != null) {
-                    if (!argNameIsNull) {
-                        componentAnno2.annotationArgs.name = name;
-                    }
                     if (componentAnno2.annotationArgs.name == null) {
-                        throw new Error(`the name of ComponentHandler is undefined`);
+                        if (!argNameIsNull) {
+                            componentAnno2.annotationArgs.name = name;
+                        }
+                        else {
+                            throw new Error(`the name of ComponentHandler is undefined`);
+                        }
                     }
                 }
                 let componentAnno3 = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.BeanComponent.name);
                 if (componentAnno3 != null) {
-                    if (!argNameIsNull) {
-                        componentAnno3.annotationArgs.name = name;
-                    }
                     if (componentAnno3.annotationArgs.name == null) {
-                        throw new Error(`the name of BeanComponent is undefined`);
+                        if (!argNameIsNull) {
+                            componentAnno3.annotationArgs.name = name;
+                        }
+                        else {
+                            throw new Error(`the name of BeanComponent is undefined`);
+                        }
                     }
                 }
             }
         }
-        this.registerClass(con, "#registerFromClass");
+        this.registerClass(con, DefaultFilepath.RegisterFromClass);
     }
     /**
      * 从method创建的对象注册模板
@@ -962,12 +961,12 @@ class ObjBox {
         let temp = {
             componentName: name,
             priority: priority,
-            className: "@" + Annotations_1.Bean.name,
+            className: DefaultFilepath.RegisterFromMethod,
             newInstance: method,
-            filePath: "#registerFromMethod",
+            filePath: DefaultFilepath.RegisterFromMethod,
             instances: [],
             createdType: scope,
-            originalType: Annotations_2.ComponentOriginalType.Bean
+            originalType: Annotations_2.ComponentOriginalType.FromMethod
         };
         this.trySaveComponentTemplate(temp);
     }
@@ -978,16 +977,6 @@ class ObjBox {
      * @param priority 优先级，当出现同名组件时，优先级高的覆盖优先级低的
      */
     registerByObject(obj, name, scope, priority) {
-        if (ObjBox.isObjectTypeofComponent(obj)) {
-            // 如果对象内部存储着类信息
-            let componentObj = obj;
-            if (componentObj._annotations_.classConstructor != null) {
-                let con = componentObj._annotations_.classConstructor;
-                this.registerFromClass(con, name, scope == null ? Annotations_1.ComponentCreatedType.Singleton : scope, priority);
-                this.componentScannedTemplates[name].instances = [obj];
-                return;
-            }
-        }
         if (name == null)
             name = "annoymous"; //不可能为null，以防万一
         priority = Number(priority);
@@ -995,22 +984,23 @@ class ObjBox {
         let temp = {
             componentName: name,
             priority: priority,
-            className: "@" + Annotations_1.Bean.name,
+            className: obj.constructor.name,
             newInstance: function () { return obj; },
-            filePath: "#registerByObject",
+            filePath: DefaultFilepath.RegisterByObject,
             instances: [],
-            createdType: Annotations_1.ComponentCreatedType.Singleton,
-            originalType: Annotations_2.ComponentOriginalType.Bean
+            createdType: scope === Annotations_1.ComponentCreatedType.Factory ? Annotations_1.ComponentCreatedType.Factory : Annotations_1.ComponentCreatedType.Singleton,
+            originalType: Annotations_2.ComponentOriginalType.ByObject
         };
         this.trySaveComponentTemplate(temp);
     }
     /**
      * 开始装载所有注册模板
+     * 该方法可以重复使用，特别是run之后再register的情况
      * 在run之后如果再register新的组件，对ApplicationHandler来说将不再触发某些事件（如start、BeforePrepare、AfterPrepare）
      */
     load() {
         // 6、对所有模板触发 @ApplicationHandler 的 start(objBox)
-        if (this.status.running === false) {
+        if (this.status.running !== true) {
             this.executeApplicationHandler_start();
         }
         //7、对所有模板触发 @ApplicationHandler 的 preprocessScannedTemplate(objbox,sTemplates[])
@@ -1051,13 +1041,13 @@ class ObjBox {
             this.executeComponentHandler_scanned(sTemplate);
         }
         // 12、触发应用处理器 @ApplicationHandler 的 processBeforePrepare(objbox)
-        if (this.status.running === false) {
+        if (this.status.running !== true) {
             this.executeApplicationHandler_BeforePrepare();
         }
         // 13、对所有模板创建第一个实例组件并进行依赖注入
         this.prepareComponents_WhenLoading();
         // 14、触发应用处理器 @ApplicationHandler 的 processAfterPrepare(objbox)
-        if (this.status.running === false) {
+        if (this.status.running !== true) {
             this.executeApplicationHandler_AfterPrepare();
         }
     }
@@ -1065,7 +1055,7 @@ class ObjBox {
      * 启动应用
      */
     run() {
-        if (this.status.running === false) {
+        if (this.status.running !== true) {
             // 15.1、触发 @ApplicationHandler 的 beforeRunning(objbox)
             this.executeApplicationHandler_beforeRunning();
             this.status.running = true;

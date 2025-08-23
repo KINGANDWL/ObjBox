@@ -202,8 +202,10 @@ var ComponentCreatedType;
 })(ComponentCreatedType = exports.ComponentCreatedType || (exports.ComponentCreatedType = {}));
 var ComponentOriginalType;
 (function (ComponentOriginalType) {
-    ComponentOriginalType["Component"] = "Component";
-    ComponentOriginalType["Bean"] = "Bean";
+    ComponentOriginalType["FromFiles"] = "FromFiles";
+    ComponentOriginalType["FromClass"] = "FromClass";
+    ComponentOriginalType["FromMethod"] = "FromMethod";
+    ComponentOriginalType["ByObject"] = "ByObject";
 })(ComponentOriginalType = exports.ComponentOriginalType || (exports.ComponentOriginalType = {}));
 // 标注ApplicationHandler为组件
 function ApplicationHandler(name = null) {

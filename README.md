@@ -101,7 +101,7 @@ main()
 
 
 
-# 原理说明
+# 流程说明
 
 ```js
 /**
@@ -183,6 +183,94 @@ main()
         15.5、触发 @ApplicationHandler 的 afterRunning(objbox)
 */
 ```
+
+## 流程图
+
+
+
+```mermaid
+graph TD
+    A[开始] --> B[进入预处理阶段]
+
+    %% 预处理阶段
+    B -->|0.TypeScript编译及装饰器预处理| C[注入元数据到_annotations_]
+
+    %% 注册阶段
+    C --> D[进入注册阶段]
+    D -->|1.注册模板| E{注册方式?}
+    E -->|文件| F[方法:registerFromFiles]
+    E -->|类| G[方法:registerFromClass]
+    E -->|方法| H[方法:registerFromMethod]
+    E -->|对象| I[方法:registerByObject]
+    F --> J{是ApplicationHandler?}
+    G --> J
+    J -->|是| K[方法:trySaveApplicationHandler]
+    J -->|否| L[方法:trySaveComponentTemplate]
+    K --> L
+
+    %% 装载阶段
+    L --> M[进入装载阶段]
+    H --> M
+    I --> M
+    M --> N[装载前期]
+    N -->|2.ApplicationHandlerInterface.start| O[触发:executeApplicationHandler_start]
+
+    O --> P[装载中期]
+    P -->|3.ApplicationHandlerInterface.preprocessScannedTemplate| Q[触发:executeApplicationHandler_preprocessScannedTemplate]
+    Q -->|4.ComponentHandlerInterface.scanned| R{是ComponentHandler?}
+    R -->|是| S[方法:trySaveComponentHandler]
+    R -->|否| T{是 BeanComponent?}
+    T -->|是| U[方法:trySaveBeanComponent<br>createBeanTemplatesFromBeanComponent]
+
+    U --> Empty01[ ]
+    S --> Empty01
+    T --> Empty01
+    Empty01 -->|5.ApplicationHandlerInterface.preprocessScannedTemplate| W[触发<br>executeApplicationHandler_preprocessScannedTemplate<br>处理Bean模板]
+
+
+
+
+    W -->|6.ComponentHandlerInterface.scanned| X[触发:executeComponentHandler_scanned]
+
+    X --> Y[装载后期]
+    Y -->|7.ApplicationHandlerInterface.beforePrepare| Z[触发:executeApplicationHandler_BeforePrepare]
+    Z -->|8.创建组件及依赖注入| AA{模板已加载?}
+    AA -->|否| AB[方法:prepareComponents_WhenLoading]
+    AA -->|是| AC[跳过创建]
+    AB -->|9.ComponentHandlerInterface.beforeCreated| AD[触发:executeComponentHandler_beforeCreated]
+    AD -->|10.TemplateHandlerInterface.created| AE[触发:executeTemplateHandler_created]
+    AE -->|11.ComponentHandlerInterface.afterCreated| AF[触发:executeComponentHandler_afterCreated]
+    AF -->|12.依赖注入| AG[方法:injectComponentDependency]
+    AG -->|13.ComponentHandlerInterface.beforeCompleted| AH[触发:executeComponentHandler_beforeCompleted]
+    AH -->|14.TemplateHandlerInterface.completed| AI[触发:executeTemplateHandler_completed]
+    AI -->|15.ComponentHandlerInterface.afterCompleted| AJ[触发:executeComponentHandler_afterCompleted]
+    AJ -->|16.条件触发| AK{应用已运行?}
+    AK -->|是| AL[ComponentHandlerInterface.beforeReady<br>触发:executeComponentHandler_beforeReady]
+    AL -->|17.TemplateHandlerInterface.ready| AM[触发:executeTemplateHandler_ready]
+    AM -->|18.ComponentHandlerInterface.afterReady| AN[触发:executeComponentHandler_afterReady]
+    AK -->|否| AO[跳过ready钩子]
+    AN --> AP[19.ApplicationHandlerInterface.afterPrepare]
+    AC --> AP
+    AO --> AP
+    AP -->|触发:executeApplicationHandler_AfterPrepare| AQ[结束装载]
+
+    %% 运行阶段
+    AQ --> AR[进入运行阶段]
+    AR -->|20.ApplicationHandlerInterface.beforeRunning| AS[触发:executeApplicationHandler_beforeRunning]
+    AS -->|21.ComponentHandlerInterface.beforeReady| AT[触发:executeComponentHandler_beforeReady]
+    AT -->|22.TemplateHandlerInterface.ready| AU[触发:executeTemplateHandler_ready]
+    AU -->|23.ComponentHandlerInterface.afterReady| AV[触发:executeComponentHandler_afterReady]
+    AV -->|24.ApplicationHandlerInterface.afterRunning| AW[触发:executeApplicationHandler_afterRunning]
+    AW --> AX[结束]
+
+    %% 样式
+    classDef stage fill:#f9f,stroke:#333,stroke-width:2px;
+    class B,D,M,AR stage;
+    classDef phase fill:#bbf,stroke:#333,stroke-width:1px;
+    class N,P,Y phase;
+```
+
+
 
 
 

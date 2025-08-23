@@ -265,7 +265,10 @@ export enum ComponentCreatedType {
     Factory = "Factory", Singleton = "Singleton"
 }
 export enum ComponentOriginalType {
-    Component = "Component", Bean = "Bean"
+    FromFiles="FromFiles",
+    FromClass="FromClass",
+    FromMethod="FromMethod",
+    ByObject="ByObject",
 }
 
 export interface ApplicationHandlerAnnotationArgs {

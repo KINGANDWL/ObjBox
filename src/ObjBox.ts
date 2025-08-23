@@ -3,7 +3,12 @@ import { DefaultManagerConfig, LoggerManagerConfig } from "../libs/logger/Logger
 import { LoggerManager } from "../libs/logger/LoggerManager";
 import { Constructor, ScannedTemplate, BeanMethod } from './interface/base/ScannedTemplate.interface';
 import { ComponentInterface } from './interface/base/Component.interface';
-import { Component as ComponentAnnotation, ApplicationHandler, ComponentHandler, ComponentAnnotationArgs, BeanComponent, Bean, BeanAnnotationArgs, AutowirePropertyAnnotationArgs, AutowireProperty, AutowireMethod, AutowireMethodAnnotationArgs, Annotations, Component, ComponentCreatedType, BeanComponentAnnotationArgs, ApplicationHandlerAnnotationArgs, ComponentHandlerAnnotationArgs } from './annotation/Annotations';
+import {
+    Component as ComponentAnnotation, ApplicationHandler, ComponentHandler, ComponentAnnotationArgs,
+    BeanComponent, Bean, BeanAnnotationArgs, AutowirePropertyAnnotationArgs, AutowireProperty, AutowireMethod,
+    AutowireMethodAnnotationArgs, Annotations, Component, ComponentCreatedType, BeanComponentAnnotationArgs, ApplicationHandlerAnnotationArgs,
+    ComponentHandlerAnnotationArgs, registerClass as _registerClass
+} from './annotation/Annotations';
 import { ComponentOriginalType } from "./annotation/Annotations";
 import { ApplicationHandlerInterface } from "./interface/ApplicationHandler.interface";
 import { ComponentHandlerInterface } from "./interface/ComponentHandler.interface";
@@ -18,6 +23,14 @@ try {
 } catch (err) {
     console.warn(`Cannot find "fs" moddule. And maybe the objbox is running in browser.`);
 }
+
+
+const DefaultFilepath = {
+    RegisterFromClass: "#registerFromClass",
+    RegisterFromMethod: "#registerFromMethod",
+    RegisterByObject: "#registerByObject",
+}
+
 
 export class ObjBox implements ObjBoxInterface {
     private config = {
@@ -199,7 +212,7 @@ export class ObjBox implements ObjBoxInterface {
             filePath: filePath,
             instances: [],
             createdType: (componentAnnotation == null || componentAnnotation.annotationArgs.scope == null) ? ComponentCreatedType.Singleton : componentAnnotation.annotationArgs.scope,
-            originalType: ComponentOriginalType.Component
+            originalType: filePath == DefaultFilepath.RegisterFromClass ? ComponentOriginalType.FromClass : ComponentOriginalType.FromFiles,
         }
         return temp
     }
@@ -435,12 +448,12 @@ export class ObjBox implements ObjBoxInterface {
                 let temp: ScannedTemplate = {
                     componentName: methodAnnotationType.annotationArgs.name,
                     priority: methodAnnotationType.annotationArgs.priority,
-                    className: "@" + Bean.name,
+                    className: DefaultFilepath.RegisterFromMethod,
                     newInstance: beanComponent[methodAnnotationType.methodName].bind(beanComponent) as BeanMethod,
                     filePath: beanComponent._annotations_.scannedTemplate.filePath,
                     instances: [],
                     createdType: methodAnnotationType.annotationArgs.scope,
-                    originalType: ComponentOriginalType.Bean
+                    originalType: ComponentOriginalType.FromMethod
                 }
                 result.push(temp)
             }
@@ -457,9 +470,9 @@ export class ObjBox implements ObjBoxInterface {
         let result: ComponentInterface = null
         if (sTemplate != null) {
             if (sTemplate.instances == null || sTemplate.instances.length <= 0 || sTemplate.createdType == ComponentCreatedType.Factory) {
-                if (sTemplate.originalType == ComponentOriginalType.Component) {
+                if (sTemplate.originalType == ComponentOriginalType.FromFiles || sTemplate.originalType == ComponentOriginalType.FromClass) {
                     result = new (sTemplate.newInstance as Constructor)();
-                } else if (sTemplate.originalType == ComponentOriginalType.Bean) {
+                } else if (sTemplate.originalType == ComponentOriginalType.FromMethod || sTemplate.originalType == ComponentOriginalType.ByObject) {
                     result = (sTemplate.newInstance as BeanMethod)();
                 }
                 if (sTemplate.instances == null) {
@@ -718,9 +731,6 @@ export class ObjBox implements ObjBoxInterface {
 
         return false
     }
-    private static isBeanAnnotation(sTemplate: ScannedTemplate): boolean {
-        return sTemplate != null && sTemplate.originalType != null && sTemplate.originalType == ComponentOriginalType.Bean
-    }
 
 
 
@@ -746,7 +756,7 @@ export class ObjBox implements ObjBoxInterface {
                 // 13.2 从缓存获取；如果缓存没有，新建
                 component = this.getComponentFromTempPool(target);
                 if (component == null) {
-                    // 13.3、触发 @ComponentHandler 的 beforeCreated(objbox,sTemplate,component)
+                    // 13.3、触发 @ComponentHandler 的 beforeCreated(objbox,sTemplate)
                     this.executeComponentHandler_beforeCreated(scannedTemplate);
                     // 13.4、新建 @Component 组件 ObjBox.createComponentFromTemplate(sTemplate)
                     component = ObjBox.createComponentFromTemplate(scannedTemplate);
@@ -778,7 +788,7 @@ export class ObjBox implements ObjBoxInterface {
                             // 13.11.3、触发 @ComponentHandler 的 beforeReady(objbox,sTemplate,component)
                             this.executeComponentHandler_afterReady(scannedTemplate, component);
                         }
-                    }else{
+                    } else {
                         throw new Error(`Cannot create component "${scannedTemplate.componentName}"`);
                     }
                 }
@@ -796,9 +806,9 @@ export class ObjBox implements ObjBoxInterface {
         if (sTemplate != null) {
             for (let ins of sTemplate.instances) {
                 if (ins == null) {
-                    throw new Error(`Cannot find component "${sTemplate.componentName}"`)
+                    throw new Error(`Cannot find component "${sTemplate.componentName}"`);
                 } else {
-                    components.push(ins as unknown as T)
+                    components.push(ins as unknown as T);
                 }
             }
         }
@@ -810,19 +820,17 @@ export class ObjBox implements ObjBoxInterface {
      * 遵循创建组件方式获取所有组件
      */
     getAllComponents<T = ComponentInterface>(): T[] {
-        let components: T[] = []
+        let components: T[] = [];
         let sTemplates = this.getAllComponentTemplate();
         for (let sTemplate of sTemplates) {
-            if (ObjBox.hasComponentAnnotation(sTemplate) || ObjBox.isBeanAnnotation(sTemplate)) {
-                let com = this.getComponent(sTemplate.componentName);
-                if (com == null) {
-                    throw new Error(`Cannot find component "${sTemplate.componentName}"`)
-                } else {
-                    components.push(com as unknown as T)
-                }
+            let com = this.getComponent(sTemplate.componentName);
+            if (com == null) {
+                throw new Error(`Cannot find component "${sTemplate.componentName}"`);
+            } else {
+                components.push(com as unknown as T)
             }
         }
-        return components
+        return components;
     }
     /**
      * 仅获取所有组件当前已存在实例，不触发创建流程（非常不推荐使用）
@@ -831,17 +839,15 @@ export class ObjBox implements ObjBoxInterface {
         let components: T[] = []
         let sTemplates = this.getAllComponentTemplate();
         for (let sTemplate of sTemplates) {
-            if (ObjBox.hasComponentAnnotation(sTemplate) || ObjBox.isBeanAnnotation(sTemplate)) {
-                for (let ins of sTemplate.instances) {
-                    if (ins == null) {
-                        throw new Error(`Cannot find component "${sTemplate.componentName}"`)
-                    } else {
-                        components.push(ins as unknown as T)
-                    }
+            for (let ins of sTemplate.instances) {
+                if (ins == null) {
+                    throw new Error(`Cannot find component "${sTemplate.componentName}"`);
+                } else {
+                    components.push(ins as unknown as T);
                 }
             }
         }
-        return components
+        return components;
     }
 
     /**
@@ -849,17 +855,15 @@ export class ObjBox implements ObjBoxInterface {
      * @param sTemplates 
      */
     private prepareComponents_WhenLoading() {
-        let sTemplates = this.getAllComponentTemplate().filter((each)=>{
+        let sTemplates = this.getAllComponentTemplate().filter((each) => {
             let isLoaded = each.isloaded === true;
-            if(!isLoaded){each.isloaded = true};
+            if (!isLoaded) { each.isloaded = true };
             return !isLoaded;
         });
         for (let sTemplate of sTemplates) {
-            if (ObjBox.hasComponentAnnotation(sTemplate) || ObjBox.isBeanAnnotation(sTemplate)) {
-                let com = this.getComponent(sTemplate.componentName);
-                if (com == null) {
-                    throw new Error(`Cannot find component "${sTemplate.componentName}"`)
-                }
+            let com = this.getComponent(sTemplate.componentName);
+            if (com == null) {
+                throw new Error(`Cannot find component "${sTemplate.componentName}"`)
             }
         }
     }
@@ -877,6 +881,7 @@ export class ObjBox implements ObjBoxInterface {
 
             // 4、校验模板是否为ApplicationHandler实例化并存储
             if (ObjBox.isTemplateTypeofApplicationHandler(sTemplate)) {
+                // 保险起见，ApplicationHandler只能通过class进行注册
                 this.trySaveApplicationHandler(sTemplate);
             }
 
@@ -928,14 +933,8 @@ export class ObjBox implements ObjBoxInterface {
 
         // 普通的未处理的class
         if (!ObjBox.isFunctionTypeofTemplate(con)) {
-
-            con.prototype._annotations_ = new Annotations()
-            con.prototype._preComponents_ = []
-            con.prototype._annotations_.clazz.pushAnnotation<ComponentAnnotationArgs>(Component.name, {
-                name: name,
-                scope: scope,
-                priority: priority
-            });
+            // 初始化annotations
+            _registerClass<ComponentAnnotationArgs>(Component.name, { name: name, scope: scope, priority: priority }, con);
         } else {
             let componentAnno = con.prototype._annotations_.clazz.getAnnotation<ComponentAnnotationArgs>(Component.name);
             if (componentAnno != null) {
@@ -943,43 +942,47 @@ export class ObjBox implements ObjBoxInterface {
                 if (!argNameIsNull || componentAnno.annotationArgs.name == null) componentAnno.annotationArgs.name = name;
                 if (!argpriorityIsNull || componentAnno.annotationArgs.priority == null) componentAnno.annotationArgs.priority = priority;
             } else {
+                // 优先使用传入参数
                 con.prototype._annotations_.clazz.pushAnnotation<ComponentAnnotationArgs>(Component.name, {
                     name: name,
                     scope: scope,
                     priority: priority
                 });
 
-                let componentAnno = con.prototype._annotations_.clazz.getAnnotation<ApplicationHandlerAnnotationArgs>(ApplicationHandler.name)
-                if (componentAnno != null) {
-                    if (!argNameIsNull) {
-                        componentAnno.annotationArgs.name = name;
-                    }
-                    if (componentAnno.annotationArgs.name == null) {
-                        throw new Error(`the name of ApplicationHandler is undefined`);
+                let componentAnno1 = con.prototype._annotations_.clazz.getAnnotation<ApplicationHandlerAnnotationArgs>(ApplicationHandler.name)
+                if (componentAnno1 != null) {
+                    if (componentAnno1.annotationArgs.name == null) {
+                        if (!argNameIsNull) {
+                            componentAnno1.annotationArgs.name = name;
+                        } else {
+                            throw new Error(`the name of ApplicationHandler is undefined`);
+                        }
                     }
                 }
                 let componentAnno2 = con.prototype._annotations_.clazz.getAnnotation<ComponentHandlerAnnotationArgs>(ComponentHandler.name)
                 if (componentAnno2 != null) {
-                    if (!argNameIsNull) {
-                        componentAnno2.annotationArgs.name = name;
-                    }
                     if (componentAnno2.annotationArgs.name == null) {
-                        throw new Error(`the name of ComponentHandler is undefined`);
+                        if (!argNameIsNull) {
+                            componentAnno2.annotationArgs.name = name;
+                        } else {
+                            throw new Error(`the name of ComponentHandler is undefined`);
+                        }
                     }
                 }
                 let componentAnno3 = con.prototype._annotations_.clazz.getAnnotation<BeanComponentAnnotationArgs>(BeanComponent.name)
                 if (componentAnno3 != null) {
-                    if (!argNameIsNull) {
-                        componentAnno3.annotationArgs.name = name;
-                    }
                     if (componentAnno3.annotationArgs.name == null) {
-                        throw new Error(`the name of BeanComponent is undefined`);
+                        if (!argNameIsNull) {
+                            componentAnno3.annotationArgs.name = name;
+                        } else {
+                            throw new Error(`the name of BeanComponent is undefined`);
+                        }
                     }
                 }
             }
         }
 
-        this.registerClass(con, "#registerFromClass")
+        this.registerClass(con, DefaultFilepath.RegisterFromClass);
     }
     /**
      * 从method创建的对象注册模板
@@ -996,12 +999,12 @@ export class ObjBox implements ObjBoxInterface {
         let temp: ScannedTemplate = {
             componentName: name,
             priority: priority,
-            className: "@" + Bean.name,
+            className: DefaultFilepath.RegisterFromMethod,
             newInstance: method as BeanMethod,
-            filePath: "#registerFromMethod",
+            filePath: DefaultFilepath.RegisterFromMethod,
             instances: [],
             createdType: scope,
-            originalType: ComponentOriginalType.Bean
+            originalType: ComponentOriginalType.FromMethod
         }
 
         this.trySaveComponentTemplate(temp);
@@ -1013,29 +1016,18 @@ export class ObjBox implements ObjBoxInterface {
      * @param priority 优先级，当出现同名组件时，优先级高的覆盖优先级低的 
      */
     registerByObject(obj: Object, name: string, scope?: ComponentCreatedType, priority?: number) {
-        if (ObjBox.isObjectTypeofComponent(obj)) {
-            // 如果对象内部存储着类信息
-            let componentObj = obj as ComponentInterface
-            if (componentObj._annotations_.classConstructor != null) {
-                let con = componentObj._annotations_.classConstructor;
-                this.registerFromClass(con, name, scope == null ? ComponentCreatedType.Singleton : scope, priority);
-                this.componentScannedTemplates[name].instances = [obj as ComponentInterface];
-                return;
-            }
-        }
-
         if (name == null) name = "annoymous"; //不可能为null，以防万一
         priority = Number(priority); priority = isNaN(priority) ? 0 : Math.trunc(priority);
 
         let temp: ScannedTemplate = {
             componentName: name,
             priority: priority,
-            className: "@" + Bean.name,
+            className: obj.constructor.name,
             newInstance: function () { return obj },
-            filePath: "#registerByObject",
+            filePath: DefaultFilepath.RegisterByObject,
             instances: [],
-            createdType: ComponentCreatedType.Singleton,
-            originalType: ComponentOriginalType.Bean
+            createdType: scope === ComponentCreatedType.Factory ? ComponentCreatedType.Factory : ComponentCreatedType.Singleton,
+            originalType: ComponentOriginalType.ByObject
         }
 
         this.trySaveComponentTemplate(temp);
@@ -1046,11 +1038,12 @@ export class ObjBox implements ObjBoxInterface {
 
     /**
      * 开始装载所有注册模板
+     * 该方法可以重复使用，特别是run之后再register的情况
      * 在run之后如果再register新的组件，对ApplicationHandler来说将不再触发某些事件（如start、BeforePrepare、AfterPrepare）
      */
     load() {
         // 6、对所有模板触发 @ApplicationHandler 的 start(objBox)
-        if (this.status.running === false) {
+        if (this.status.running !== true) {
             this.executeApplicationHandler_start();
         }
 
@@ -1095,13 +1088,13 @@ export class ObjBox implements ObjBoxInterface {
         }
 
         // 12、触发应用处理器 @ApplicationHandler 的 processBeforePrepare(objbox)
-        if (this.status.running === false) {
+        if (this.status.running !== true) {
             this.executeApplicationHandler_BeforePrepare();
         }
         // 13、对所有模板创建第一个实例组件并进行依赖注入
         this.prepareComponents_WhenLoading();
         // 14、触发应用处理器 @ApplicationHandler 的 processAfterPrepare(objbox)
-        if (this.status.running === false) {
+        if (this.status.running !== true) {
             this.executeApplicationHandler_AfterPrepare();
         }
     }
@@ -1112,7 +1105,7 @@ export class ObjBox implements ObjBoxInterface {
      * 启动应用
      */
     run() {
-        if (this.status.running === false) {
+        if (this.status.running !== true) {
             // 15.1、触发 @ApplicationHandler 的 beforeRunning(objbox)
             this.executeApplicationHandler_beforeRunning()
 
