@@ -900,44 +900,44 @@ class ObjBox {
                 if (!argpriorityIsNull || componentAnno.annotationArgs.priority == null)
                     componentAnno.annotationArgs.priority = priority;
             }
-            else {
+            else if (con.prototype._annotations_.clazz == null || Object.keys(con.prototype._annotations_.clazz.annotationNameMap).length == 0) {
                 // 优先使用传入参数
                 con.prototype._annotations_.clazz.pushAnnotation(Annotations_1.Component.name, {
                     name: name,
                     scope: scope,
                     priority: priority
                 });
-                let componentAnno1 = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.ApplicationHandler.name);
-                if (componentAnno1 != null) {
-                    if (componentAnno1.annotationArgs.name == null) {
-                        if (!argNameIsNull) {
-                            componentAnno1.annotationArgs.name = name;
-                        }
-                        else {
-                            throw new Error(`the name of ApplicationHandler is undefined`);
-                        }
+            }
+            let componentAnno1 = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.ApplicationHandler.name);
+            if (componentAnno1 != null) {
+                if (componentAnno1.annotationArgs.name == null) {
+                    if (!argNameIsNull) {
+                        componentAnno1.annotationArgs.name = name;
+                    }
+                    else {
+                        throw new Error(`the name of ApplicationHandler is undefined`);
                     }
                 }
-                let componentAnno2 = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.ComponentHandler.name);
-                if (componentAnno2 != null) {
-                    if (componentAnno2.annotationArgs.name == null) {
-                        if (!argNameIsNull) {
-                            componentAnno2.annotationArgs.name = name;
-                        }
-                        else {
-                            throw new Error(`the name of ComponentHandler is undefined`);
-                        }
+            }
+            let componentAnno2 = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.ComponentHandler.name);
+            if (componentAnno2 != null) {
+                if (componentAnno2.annotationArgs.name == null) {
+                    if (!argNameIsNull) {
+                        componentAnno2.annotationArgs.name = name;
+                    }
+                    else {
+                        throw new Error(`the name of ComponentHandler is undefined`);
                     }
                 }
-                let componentAnno3 = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.BeanComponent.name);
-                if (componentAnno3 != null) {
-                    if (componentAnno3.annotationArgs.name == null) {
-                        if (!argNameIsNull) {
-                            componentAnno3.annotationArgs.name = name;
-                        }
-                        else {
-                            throw new Error(`the name of BeanComponent is undefined`);
-                        }
+            }
+            let componentAnno3 = con.prototype._annotations_.clazz.getAnnotation(Annotations_1.BeanComponent.name);
+            if (componentAnno3 != null) {
+                if (componentAnno3.annotationArgs.name == null) {
+                    if (!argNameIsNull) {
+                        componentAnno3.annotationArgs.name = name;
+                    }
+                    else {
+                        throw new Error(`the name of BeanComponent is undefined`);
                     }
                 }
             }

@@ -25,5 +25,5 @@ __exportStar(require("./src/interface/ObjBox.interface"), exports);
 __exportStar(require("./src/interface/TemplateHandler.interface"), exports);
 __exportStar(require("./ObjBoxHelper/ObjBoxHelper"), exports);
 // 内置工具库，这里注释掉是因为有一个在Logger中Constructor类型与ScannedTemplate中的Constructor重名了，用户可以手动在项目内添加即可
-// export * from "./libs"
+// export * from "./libs";
 //[[[[[[[[[[[[[[[[[[[[[[[ 更多说明请查看node_module/objbox/readme.md ]]]]]]]]]]]]]]]]]]]]]]]
