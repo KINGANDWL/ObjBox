@@ -207,7 +207,11 @@ var ComponentOriginalType;
     ComponentOriginalType["FromMethod"] = "FromMethod";
     ComponentOriginalType["ByObject"] = "ByObject";
 })(ComponentOriginalType = exports.ComponentOriginalType || (exports.ComponentOriginalType = {}));
-// 标注ApplicationHandler为组件
+/**
+ * 标注ApplicationHandler为组件，强烈推荐不要省略name，在ts编译优化情况下，类型名称会被擦除，会导致名称重复问题
+ * @param name
+ * @returns
+ */
 function ApplicationHandler(name = null) {
     let _annotationName = getFunName(2);
     return function (target) {
@@ -218,7 +222,11 @@ function ApplicationHandler(name = null) {
     };
 }
 exports.ApplicationHandler = ApplicationHandler;
-// 标注ComponentHandler为组件
+/**
+ * 标注ComponentHandler为组件，强烈推荐不要省略name，在ts编译优化情况下，类型名称会被擦除，会导致名称重复问题
+ * @param name
+ * @returns
+ */
 function ComponentHandler(name = null) {
     let _annotationName = getFunName(2);
     return function (target) {
@@ -229,7 +237,11 @@ function ComponentHandler(name = null) {
     };
 }
 exports.ComponentHandler = ComponentHandler;
-// 标注BeanComponent为组件
+/**
+ * 标注BeanComponent为组件，强烈推荐不要省略name，在ts编译优化情况下，类型名称会被擦除，会导致名称重复问题
+ * @param name
+ * @returns
+ */
 function BeanComponent(name = null) {
     let _annotationName = getFunName(2);
     return function (target) {
@@ -250,7 +262,13 @@ function Bean(name, scope = ComponentCreatedType.Singleton, priority) {
     };
 }
 exports.Bean = Bean;
-// 标注class为组件
+/**
+ * 标注class为组件，强烈推荐不要省略name，在ts编译优化情况下，类型名称会被擦除，会导致名称重复问题
+ * @param name
+ * @param scope
+ * @param priority
+ * @returns
+ */
 function Component(name = null, scope = ComponentCreatedType.Singleton, priority) {
     let _annotationName = getFunName(2);
     return function (target) {

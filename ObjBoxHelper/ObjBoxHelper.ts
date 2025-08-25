@@ -108,7 +108,7 @@ export class ObjBoxHelper {
     public static doesTemplateHaveClassAnnotation(annotationName: string, template: ScannedTemplate): boolean {
         if (template != null && annotationName != null) {
             if (template.originalType != null) {
-                if(template.newInstance.prototype._annotations_ != null){
+                if (template.newInstance.prototype._annotations_ != null) {
                     return template.newInstance.prototype._annotations_.clazz.getAnnotation(annotationName) != null
                 }
             }
@@ -223,7 +223,7 @@ export class ObjBoxHelper {
     public static getClassAnnotationFromTemplate<T = any>(annotationName: string, template: ScannedTemplate): T {
         if (template != null) {
             let prot = template.newInstance.prototype;
-            if(prot._annotations_ != null){
+            if (prot._annotations_ != null) {
                 let anno = prot._annotations_.clazz.getAnnotation<T>(annotationName)
                 if (anno != null) {
                     return anno.annotationArgs
@@ -240,7 +240,7 @@ export class ObjBoxHelper {
     public static getMethodsAnnotationFromTemplate<T = any>(annotationName: string, template: ScannedTemplate): MethodAnnotationType<T>[] {
         if (template != null) {
             let prot = template.newInstance.prototype;
-            if(prot._annotations_ != null){
+            if (prot._annotations_ != null) {
                 let mats: MethodAnnotationType<T>[] = prot._annotations_.methods.getAnnotationsByName<T>(annotationName)
                 if (mats != null) {
                     return mats
@@ -257,7 +257,7 @@ export class ObjBoxHelper {
     public static getPropertyAnnotationFromTemplate<T = any>(annotationName: string, template: ScannedTemplate): PropertyAnnotationType<T>[] {
         if (template != null) {
             let prot = template.newInstance.prototype;
-            if(prot._annotations_ != null){
+            if (prot._annotations_ != null) {
                 let pats: PropertyAnnotationType<T>[] = prot._annotations_.property.getAnnotationByName<T>(annotationName)
                 if (pats != null) {
                     return pats
@@ -275,7 +275,7 @@ export class ObjBoxHelper {
     public static getMethodArgsAnnotationFromTemplate<T = any>(annotationName: string, template: ScannedTemplate): MethodArgumentsAnnotationType<T>[] {
         if (template != null) {
             let prot = template.newInstance.prototype;
-            if(prot._annotations_ != null){
+            if (prot._annotations_ != null) {
                 let maats: MethodArgumentsAnnotationType<T>[] = prot._annotations_.methodArguments.getAnnotationByName<T>(annotationName)
                 if (maats != null) {
                     return maats
@@ -300,7 +300,7 @@ export class ObjBoxHelper {
         if (annotationName != null && clazz != null && _clazz.prototype != null && _clazz.prototype._annotations_ != null) {
             let _annotations_ = _clazz.prototype._annotations_;
             let classAnno = _annotations_.clazz.getAnnotation<T>(annotationName);
-            if(classAnno != null){
+            if (classAnno != null) {
                 return classAnno.annotationArgs
             }
         }
@@ -331,7 +331,7 @@ export class ObjBoxHelper {
         let _clazz = clazz as Constructor
         if (annotationName != null && clazz != null && _clazz.prototype != null && _clazz.prototype._annotations_ != null) {
             let _annotations_ = _clazz.prototype._annotations_;
-            
+
             let pats: PropertyAnnotationType<T>[] = _annotations_.property.getAnnotationByName<T>(annotationName)
             if (pats != null) {
                 return pats
@@ -372,11 +372,10 @@ export class ObjBoxHelper {
         if (component != null) {
             let m = component[methodKey] as Function
             if (m != null) {
-                let bm = m.bind(component);
                 component[methodKey] = function (...args: any[]) {
-                    let _args = fun(...args)
+                    let _args = fun.call(this, ...args)
                     args = (_args == null) ? args : _args
-                    return bm(...args)
+                    return m.call(this, ...args)
                 }
             }
         }
@@ -391,10 +390,9 @@ export class ObjBoxHelper {
         if (component != null) {
             let m = component[methodKey] as Function
             if (m != null) {
-                let bm = m.bind(component);
                 component[methodKey] = function (...args: any[]) {
-                    let result = bm(...args)
-                    let _result = fun(result)
+                    let result = m.call(this, ...args)
+                    let _result = fun.call(this, result)
                     result = (_result == null) ? result : _result;
                     return result
                 }

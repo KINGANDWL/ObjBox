@@ -274,7 +274,11 @@ export enum ComponentOriginalType {
 export interface ApplicationHandlerAnnotationArgs {
     name: string
 }
-// 标注ApplicationHandler为组件
+/**
+ * 标注ApplicationHandler为组件，强烈推荐不要省略name，在ts编译优化情况下，类型名称会被擦除，会导致名称重复问题
+ * @param name 
+ * @returns 
+ */
 export function ApplicationHandler(name: string = null): ClassDecorator {
     let _annotationName = getFunName(2)
     return function (target: Function): any {
@@ -288,7 +292,11 @@ export function ApplicationHandler(name: string = null): ClassDecorator {
 export interface ComponentHandlerAnnotationArgs {
     name: string
 }
-// 标注ComponentHandler为组件
+/**
+ * 标注ComponentHandler为组件，强烈推荐不要省略name，在ts编译优化情况下，类型名称会被擦除，会导致名称重复问题
+ * @param name 
+ * @returns 
+ */
 export function ComponentHandler(name: string = null): ClassDecorator {
     let _annotationName = getFunName(2)
     return function (target: Function): any {
@@ -302,7 +310,11 @@ export function ComponentHandler(name: string = null): ClassDecorator {
 export interface BeanComponentAnnotationArgs {
     name: string
 }
-// 标注BeanComponent为组件
+/**
+ * 标注BeanComponent为组件，强烈推荐不要省略name，在ts编译优化情况下，类型名称会被擦除，会导致名称重复问题
+ * @param name 
+ * @returns 
+ */
 export function BeanComponent(name: string = null): ClassDecorator {
     let _annotationName = getFunName(2)
     return function (target: Function): any {
@@ -332,7 +344,13 @@ export interface ComponentAnnotationArgs {
     scope: ComponentCreatedType
     priority: number
 }
-// 标注class为组件
+/**
+ * 标注class为组件，强烈推荐不要省略name，在ts编译优化情况下，类型名称会被擦除，会导致名称重复问题
+ * @param name 
+ * @param scope 
+ * @param priority 
+ * @returns 
+ */ 
 export function Component(name: string = null, scope: ComponentCreatedType = ComponentCreatedType.Singleton, priority?: number): ClassDecorator {
     let _annotationName = getFunName(2)
     return function (target: Function): any {

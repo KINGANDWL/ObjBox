@@ -332,11 +332,10 @@ class ObjBoxHelper {
         if (component != null) {
             let m = component[methodKey];
             if (m != null) {
-                let bm = m.bind(component);
                 component[methodKey] = function (...args) {
-                    let _args = fun(...args);
+                    let _args = fun.call(this, ...args);
                     args = (_args == null) ? args : _args;
-                    return bm(...args);
+                    return m.call(this, ...args);
                 };
             }
         }
@@ -351,10 +350,9 @@ class ObjBoxHelper {
         if (component != null) {
             let m = component[methodKey];
             if (m != null) {
-                let bm = m.bind(component);
                 component[methodKey] = function (...args) {
-                    let result = bm(...args);
-                    let _result = fun(result);
+                    let result = m.call(this, ...args);
+                    let _result = fun.call(this, result);
                     result = (_result == null) ? result : _result;
                     return result;
                 };
