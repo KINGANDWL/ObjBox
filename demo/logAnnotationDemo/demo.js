@@ -55,6 +55,44 @@ __decorate([
 YourClass = __decorate([
     (0, __1.Component)()
 ], YourClass);
+// 构造器注入测试
+let ClassC = class ClassC {
+    constructor() {
+        this.value = "ClassC";
+    }
+};
+ClassC = __decorate([
+    (0, __1.Component)("ClassC")
+], ClassC);
+let ClassBNeedClassC = class ClassBNeedClassC {
+    constructor(classC) {
+        this.value = "ClassB";
+        this.c = null;
+        console.log("yes get classC", classC);
+        this.c = classC;
+    }
+    getC() {
+        return this.c;
+    }
+};
+ClassBNeedClassC = __decorate([
+    (0, __1.ComponentInject)([{ name: "ClassC" }]),
+    (0, __1.Component)("ClassBNeedClassC")
+], ClassBNeedClassC);
+let ClassANeedClassB = class ClassANeedClassB {
+    constructor(classB) {
+        this.b = null;
+        console.log("yes get classB", classB);
+        this.b = classB;
+    }
+    getB() {
+        return this.b;
+    }
+};
+ClassANeedClassB = __decorate([
+    (0, __1.ComponentInject)([{ name: "ClassBNeedClassC" }]),
+    (0, __1.Component)("ClassANeedClassB")
+], ClassANeedClassB);
 function main() {
     // 配置容器日志（非必要）
     let loggerConfig = {
@@ -62,17 +100,24 @@ function main() {
         timeFormate: `${libs_1.TimeFlag.Year}-${libs_1.TimeFlag.Month}-${libs_1.TimeFlag.Day} ${libs_1.TimeFlag.Hour}:${libs_1.TimeFlag.Minute}:${libs_1.TimeFlag.Second}`
     };
     let ob = __1.ObjBoxHelper.newObjBox(loggerConfig);
-    ob.registerFromClass(LogHandler);
-    ob.registerFromClass(YourClass);
-    ob.registerFromFiles([
-        new __1.ScanDir(__dirname + "/../HandlerDemo/"),
-        new __1.ScanDir(__dirname + "/../ComponentScanDemo/")
-    ]);
+    // ob.registerFromClass(LogHandler)
+    // ob.registerFromClass(YourClass)
+    // ob.registerFromFiles([
+    //     new ScanDir(__dirname + "/../HandlerDemo/"),
+    //     new ScanDir(__dirname + "/../ComponentScanDemo/")
+    // ])
+    ob.registerFromClass(ClassC);
+    ob.registerFromClass(ClassBNeedClassC);
+    ob.registerFromClass(ClassANeedClassB);
     // 启动装载
     ob.load();
     //启动容器应用
     ob.run();
-    let yourclass = ob.getComponent(YourClass.name);
-    yourclass.add(123, 456);
+    let A = ob.getComponent(ClassANeedClassB.name);
+    console.log(A);
+    console.log(A.getB());
+    console.log(A.getB().getC());
+    // let yourclass: YourClass = ob.getComponent(YourClass.name)
+    // yourclass.add(123, 456);
 }
 main();

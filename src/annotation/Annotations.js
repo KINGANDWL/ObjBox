@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Annotation = exports.AutowireMethod = exports.AutowireProperty = exports.Component = exports.Bean = exports.BeanComponent = exports.ComponentHandler = exports.ApplicationHandler = exports.ComponentOriginalType = exports.ComponentCreatedType = exports.registerMethodArguments = exports.registerClass = exports.registerMethod = exports.registerProperty = exports.Annotations = exports.MethodArgumentsAnnotation = exports.PropertyAnnotation = exports.MethodAnnotation = exports.ClassAnnotation = exports.getFunName = void 0;
+exports.Annotation = exports.AutowireMethod = exports.AutowireProperty = exports.ComponentInject = exports.Component = exports.Bean = exports.BeanComponent = exports.ComponentHandler = exports.ApplicationHandler = exports.ComponentOriginalType = exports.ComponentCreatedType = exports.registerMethodArguments = exports.registerClass = exports.registerMethod = exports.registerProperty = exports.Annotations = exports.MethodArgumentsAnnotation = exports.PropertyAnnotation = exports.MethodAnnotation = exports.ClassAnnotation = exports.getFunName = void 0;
 /**
  * 通过异常动态获取函数名
  * @param level 跳出层次，1为当前函数
@@ -281,6 +281,20 @@ function Component(name = null, scope = ComponentCreatedType.Singleton, priority
     };
 }
 exports.Component = Component;
+/**
+ * 标注class为组件，强烈推荐不要省略name，在ts编译优化情况下，类型名称会被擦除，会导致名称重复问题
+ * @param name
+ * @param scope
+ * @param priority
+ * @returns
+ */
+function ComponentInject(index) {
+    let _annotationName = getFunName(2);
+    return function (target) {
+        registerClass(_annotationName, { arr: index }, target);
+    };
+}
+exports.ComponentInject = ComponentInject;
 // 属性注入
 function AutowireProperty(target, required = true) {
     let _annotationName = getFunName(2);
@@ -314,6 +328,7 @@ Object.defineProperty(ComponentHandler, "name", { value: "ComponentHandler" });
 Object.defineProperty(BeanComponent, "name", { value: "BeanComponent" });
 Object.defineProperty(Bean, "name", { value: "Bean" });
 Object.defineProperty(Component, "name", { value: "Component" });
+Object.defineProperty(ComponentInject, "name", { value: "ComponentInject" });
 Object.defineProperty(AutowireProperty, "name", { value: "AutowireProperty" });
 Object.defineProperty(AutowireMethod, "name", { value: "AutowireMethod" });
 Object.defineProperty(Annotation, "name", { value: "Annotation" });

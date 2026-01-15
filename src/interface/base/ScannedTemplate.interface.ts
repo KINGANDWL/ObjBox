@@ -3,8 +3,8 @@ import { ComponentInterface } from './Component.interface';
 
 //构造函数类型
 export type Constructor = {
-    new(),
-    // new(...args:any[]);
+    // new(),
+    new(...args:any[]);
     prototype: ComponentInterface
 };
 //普通函数类型

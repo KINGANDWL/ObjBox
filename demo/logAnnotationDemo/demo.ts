@@ -1,5 +1,5 @@
 //main.ts
-import { Component, ComponentHandler, ComponentHandlerInterface, ObjBoxHelper, ObjBoxInterface, ScanDir, ScannedTemplate } from "../../";
+import { Component, ComponentHandler, ComponentHandlerInterface, ComponentInject, ObjBoxHelper, ObjBoxInterface, ScanDir, ScannedTemplate } from "../../";
 import { LoggerManagerConfig, TimeFlag } from "../..//libs";
 import { getFunName, registerMethod } from "../../"
 import { Level } from "../../libs/logger/Level";
@@ -19,17 +19,17 @@ export function Log(): MethodDecorator {
     }
 }
 @ComponentHandler()
-class LogHandler implements ComponentHandlerInterface{
+class LogHandler implements ComponentHandlerInterface {
     scanned: (objbox: ObjBoxInterface, template: ScannedTemplate) => void;
-    afterCreated(objbox: ObjBoxInterface, template: ScannedTemplate, component: any){
-        let methodAnnos = ObjBoxHelper.getMethodsAnnotationFromComponent(Log.name,component)
-        for(let methodAnno of methodAnnos){
-            ObjBoxHelper.insertFunctionBeforeMethod(component,methodAnno.methodName,(...args)=>{
-                console.log("args: ",...args);
+    afterCreated(objbox: ObjBoxInterface, template: ScannedTemplate, component: any) {
+        let methodAnnos = ObjBoxHelper.getMethodsAnnotationFromComponent(Log.name, component)
+        for (let methodAnno of methodAnnos) {
+            ObjBoxHelper.insertFunctionBeforeMethod(component, methodAnno.methodName, (...args) => {
+                console.log("args: ", ...args);
                 return args
             })
-            ObjBoxHelper.insertFunctionAfterMethod(component,methodAnno.methodName,(result:any)=>{
-                console.log("result: "+result)
+            ObjBoxHelper.insertFunctionAfterMethod(component, methodAnno.methodName, (result: any) => {
+                console.log("result: " + result)
                 return result
             })
         }
@@ -48,6 +48,42 @@ class YourClass {
 
 
 
+// 构造器注入测试
+@Component("ClassC")
+class ClassC {
+    value: string = "ClassC"
+}
+
+@ComponentInject([{ name: "ClassC" }])
+@Component("ClassBNeedClassC")
+class ClassBNeedClassC {
+    value: string = "ClassB";
+
+    private c: ClassC = null;
+    constructor(classC: ClassC) {
+        console.log("yes get classC",classC)
+        this.c = classC
+    }
+
+    getC() {
+        return this.c
+    }
+}
+
+@ComponentInject([{ name: "ClassBNeedClassC" }])
+@Component("ClassANeedClassB")
+class ClassANeedClassB {
+    private b: ClassBNeedClassC = null;
+    constructor(classB: ClassBNeedClassC) {
+        console.log("yes get classB",classB)
+        this.b = classB
+    }
+
+    getB() {
+        return this.b
+    }
+}
+
 
 
 
@@ -60,13 +96,17 @@ function main() {
 
     let ob = ObjBoxHelper.newObjBox(loggerConfig);
 
-    ob.registerFromClass(LogHandler)
-    ob.registerFromClass(YourClass)
+    // ob.registerFromClass(LogHandler)
+    // ob.registerFromClass(YourClass)
 
-    ob.registerFromFiles([
-        new ScanDir(__dirname+"/../HandlerDemo/"),
-        new ScanDir(__dirname+"/../ComponentScanDemo/")
-    ])
+    // ob.registerFromFiles([
+    //     new ScanDir(__dirname + "/../HandlerDemo/"),
+    //     new ScanDir(__dirname + "/../ComponentScanDemo/")
+    // ])
+
+    ob.registerFromClass(ClassC)
+    ob.registerFromClass(ClassBNeedClassC)
+    ob.registerFromClass(ClassANeedClassB)
 
     // 启动装载
     ob.load()
@@ -74,8 +114,13 @@ function main() {
     //启动容器应用
     ob.run();
 
+    let A: ClassANeedClassB = ob.getComponent(ClassANeedClassB.name)
+    console.log(A)
+    console.log(A.getB())
+    console.log(A.getB().getC())
 
-    let yourclass : YourClass = ob.getComponent(YourClass.name)
-    yourclass.add(123,456);
+
+    // let yourclass: YourClass = ob.getComponent(YourClass.name)
+    // yourclass.add(123, 456);
 }
 main()

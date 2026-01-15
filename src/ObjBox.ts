@@ -7,7 +7,9 @@ import {
     Component as ComponentAnnotation, ApplicationHandler, ComponentHandler, ComponentAnnotationArgs,
     BeanComponent, Bean, BeanAnnotationArgs, AutowirePropertyAnnotationArgs, AutowireProperty, AutowireMethod,
     AutowireMethodAnnotationArgs, Annotations, Component, ComponentCreatedType, BeanComponentAnnotationArgs, ApplicationHandlerAnnotationArgs,
-    ComponentHandlerAnnotationArgs, registerClass as _registerClass
+    ComponentHandlerAnnotationArgs, registerClass as _registerClass,
+    ComponentInject,
+    ComponentInjectAnnotationArgs
 } from './annotation/Annotations';
 import { ComponentOriginalType } from "./annotation/Annotations";
 import { ApplicationHandlerInterface } from "./interface/ApplicationHandler.interface";
@@ -58,6 +60,7 @@ export class ObjBox implements ObjBoxInterface {
     private beanComponentTemplates: { [key: string]: ScannedTemplate } = {} //<string,ScannedTemplate>
 
     private componentTempPool: { [key: string]: any } = {}
+    private constructorInstanceIsCreating: Set<string> = new Set()
     private componentTempPool_Function: Map<Function, any> = new Map()
 
     private status: { running: boolean } = {
@@ -466,12 +469,48 @@ export class ObjBox implements ObjBoxInterface {
      * 通过模板获取实例化
      * @param sTemplate 
      */
-    private static createComponentFromTemplate(sTemplate: ScannedTemplate): ComponentInterface {
+    private createComponentFromTemplate(sTemplate: ScannedTemplate): ComponentInterface {
         let result: ComponentInterface = null
         if (sTemplate != null) {
             if (sTemplate.instances == null || sTemplate.instances.length <= 0 || sTemplate.createdType == ComponentCreatedType.Factory) {
                 if (sTemplate.originalType == ComponentOriginalType.FromFiles || sTemplate.originalType == ComponentOriginalType.FromClass) {
-                    result = new (sTemplate.newInstance as Constructor)();
+                    // 临时存储自己，以防多构造器循环引用
+                    this.setConstructorRefIsCreating(sTemplate.componentName);
+
+                    let cons = sTemplate.newInstance as Constructor;
+                    let constructorArgsList: ComponentInjectAnnotationArgs = { arr: [] };
+                    let cons_args: any[] = [];
+                    // 将构造引用临时存储，用于构造函数的参数注入。没用二级缓存方式是因为我脑子不好使，为了防止代码过度复杂不利于后面维护
+                    if (ObjBox.hasComponentInjectAnnotation(sTemplate)) {
+                        let _constructorArgsList = cons.prototype._annotations_.clazz.getAnnotation<ComponentInjectAnnotationArgs>(ComponentInject.name)
+                        if (_constructorArgsList != null) {
+                            constructorArgsList = _constructorArgsList.annotationArgs;
+                        }
+                    }
+                    for (let i = 0; i < constructorArgsList.arr.length; i++) {
+                        let argsInfo = constructorArgsList.arr[i];
+                        if (argsInfo != null) {
+                            let ref = null;
+                            if (argsInfo.name != null) {
+                                if (this.isConstructorRefCreating(argsInfo.name)) {
+                                    throw new Error(`Circular reference of "${argsInfo.name}" while injecting dependencies of "${sTemplate.componentName}" by @ComponentInject`)
+                                } else {
+                                    ref = this.getComponent(argsInfo.name);
+                                }
+                            } else if (argsInfo.value != null) {
+                                ref = argsInfo.value;
+                            } else if (argsInfo.ref != null && typeof (argsInfo.ref) == "function") {
+                                ref = argsInfo.ref(this);
+                            }
+                            if (ref == null && argsInfo.require !== false) {
+                                throw new Error(`Cannot find component "${argsInfo.name}" while injecting dependencies of "${sTemplate.componentName}" by @ComponentInject`)
+                            } else {
+                                cons_args.push(ref);
+                            }
+                        }
+                    }
+                    result = new cons(...cons_args);
+                    this.removesaveConstructorRef(sTemplate.componentName);
                 } else if (sTemplate.originalType == ComponentOriginalType.FromMethod || sTemplate.originalType == ComponentOriginalType.ByObject) {
                     result = (sTemplate.newInstance as BeanMethod)();
                 }
@@ -693,6 +732,19 @@ export class ObjBox implements ObjBoxInterface {
         delete this.componentTempPool[key]
         this.componentTempPool_Function.delete(clazz);
     }
+    private setConstructorRefIsCreating(key: string) {
+        if (this.constructorInstanceIsCreating.has(key)) {
+            throw new Error(`"${key}" of constructor instance ref is repeat`)
+        } else {
+            this.constructorInstanceIsCreating.add(key);
+        }
+    }
+    private isConstructorRefCreating(target: string): boolean {
+        return this.constructorInstanceIsCreating.has(target) === true;
+    }
+    private removesaveConstructorRef(key: string) {
+        this.constructorInstanceIsCreating.delete(key);
+    }
     private static setInstanceToExtendsAnnotations(sTemplate: ScannedTemplate, instance: ComponentInterface): ComponentInterface {
         if (instance._annotations_ == null) {
             if (sTemplate.newInstance.prototype != null && sTemplate.newInstance.prototype._annotations_ != null) {
@@ -731,6 +783,14 @@ export class ObjBox implements ObjBoxInterface {
 
         return false
     }
+    private static hasComponentInjectAnnotation(sTemplate: ScannedTemplate): boolean {
+        let com = sTemplate.newInstance as Constructor
+        if (com.prototype != null && com.prototype._annotations_ != null) {
+            return com.prototype._annotations_.clazz.getAnnotation<ComponentInjectAnnotationArgs>(ComponentInject.name) != null
+        }
+
+        return false
+    }
 
 
 
@@ -759,7 +819,7 @@ export class ObjBox implements ObjBoxInterface {
                     // 13.3、触发 @ComponentHandler 的 beforeCreated(objbox,sTemplate)
                     this.executeComponentHandler_beforeCreated(scannedTemplate);
                     // 13.4、新建 @Component 组件 ObjBox.createComponentFromTemplate(sTemplate)
-                    component = ObjBox.createComponentFromTemplate(scannedTemplate);
+                    component = this.createComponentFromTemplate(scannedTemplate);
                     if (component != null) {
                         this.saveComponentToLevelTwo(scannedTemplate.componentName, scannedTemplate.newInstance, component); //实例存入缓存
 

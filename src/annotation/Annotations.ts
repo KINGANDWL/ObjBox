@@ -1,6 +1,7 @@
 import { ScannedTemplate } from '../interface/base/ScannedTemplate.interface';
 import { ComponentInterface } from '../interface/base/Component.interface';
 import { Constructor } from '../interface/base/ScannedTemplate.interface';
+import { ObjBox } from '../ObjBox';
 
 /**
  * 通过异常动态获取函数名
@@ -265,10 +266,10 @@ export enum ComponentCreatedType {
     Factory = "Factory", Singleton = "Singleton"
 }
 export enum ComponentOriginalType {
-    FromFiles="FromFiles",
-    FromClass="FromClass",
-    FromMethod="FromMethod",
-    ByObject="ByObject",
+    FromFiles = "FromFiles",
+    FromClass = "FromClass",
+    FromMethod = "FromMethod",
+    ByObject = "ByObject",
 }
 
 export interface ApplicationHandlerAnnotationArgs {
@@ -350,7 +351,7 @@ export interface ComponentAnnotationArgs {
  * @param scope 
  * @param priority 
  * @returns 
- */ 
+ */
 export function Component(name: string = null, scope: ComponentCreatedType = ComponentCreatedType.Singleton, priority?: number): ClassDecorator {
     let _annotationName = getFunName(2)
     return function (target: Function): any {
@@ -359,6 +360,46 @@ export function Component(name: string = null, scope: ComponentCreatedType = Com
             name = target.name
         }
         registerClass<ComponentAnnotationArgs>(_annotationName, { name: name, scope: scope, priority: priority }, target)
+    }
+}
+
+interface ComponentInjectAnnotationArg {
+    /**
+     * （优先级:1）构造器注入目标索引名称（通过名称注入）
+     */
+    name?: string
+    /**
+     * （优先级:2）注入目标值
+     */
+    value?: any
+    /**
+     * （优先级:3）通过函数注入
+     * @param objbox 
+     * @returns 被注入值
+     */
+    ref?: (objbox: ObjBox) => any
+    /**
+     * 是否可缺少
+     */
+    require?: boolean
+}
+export interface ComponentInjectAnnotationArgs {
+    /**
+     * 构造器注入参数列表
+     */
+    arr: ComponentInjectAnnotationArg[]
+}
+/**
+ * 标注class为组件，强烈推荐不要省略name，在ts编译优化情况下，类型名称会被擦除，会导致名称重复问题
+ * @param name 
+ * @param scope 
+ * @param priority 
+ * @returns 
+ */
+export function ComponentInject(index: ComponentInjectAnnotationArg[]): ClassDecorator {
+    let _annotationName = getFunName(2)
+    return function (target: Function): any {
+        registerClass<ComponentInjectAnnotationArgs>(_annotationName, { arr: index }, target)
     }
 }
 
@@ -407,6 +448,7 @@ Object.defineProperty(ComponentHandler, "name", { value: "ComponentHandler" });
 Object.defineProperty(BeanComponent, "name", { value: "BeanComponent" });
 Object.defineProperty(Bean, "name", { value: "Bean" });
 Object.defineProperty(Component, "name", { value: "Component" });
+Object.defineProperty(ComponentInject, "name", { value: "ComponentInject" });
 Object.defineProperty(AutowireProperty, "name", { value: "AutowireProperty" });
 Object.defineProperty(AutowireMethod, "name", { value: "AutowireMethod" });
 Object.defineProperty(Annotation, "name", { value: "Annotation" });
