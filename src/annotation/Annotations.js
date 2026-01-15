@@ -282,10 +282,8 @@ function Component(name = null, scope = ComponentCreatedType.Singleton, priority
 }
 exports.Component = Component;
 /**
- * 标注class为组件，强烈推荐不要省略name，在ts编译优化情况下，类型名称会被擦除，会导致名称重复问题
- * @param name
- * @param scope
- * @param priority
+ * 构造参数注入注解
+ * @param index 参数索引
  * @returns
  */
 function ComponentInject(index) {
