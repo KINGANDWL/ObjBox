@@ -339,6 +339,44 @@ export function Bean(name: string, scope: ComponentCreatedType = ComponentCreate
         registerMethod<BeanAnnotationArgs>(_annotationName, { name: name, scope: scope, priority: priority }, target, key, descriptor)
     }
 }
+interface BeanInjectAnnotationArg {
+    /**
+     * （优先级:1）Bean函数注入目标索引名称（通过名称注入）
+     */
+    name?: string
+    /**
+     * （优先级:2）注入目标值
+     */
+    value?: any
+    /**
+     * （优先级:3）通过函数注入
+     * @param objbox 
+     * @returns 被注入值
+     */
+    ref?: (objbox: ObjBox) => any
+    /**
+     * 是否可缺少
+     */
+    require?: boolean
+}
+export interface BeanInjectAnnotationArgs {
+    /**
+     * Bean函数注入参数列表
+     */
+    arr: BeanInjectAnnotationArg[]
+}
+/**
+ * Bean函数参数注入注解
+ * @param index 参数索引
+ * @returns 
+ */
+export function BeanInject(index: BeanInjectAnnotationArg[]): MethodDecorator {
+    let _annotationName = getFunName(2)
+    return function (target: any, key: string, descriptor: PropertyDescriptor): any {
+        registerMethod<BeanInjectAnnotationArgs>(_annotationName, { arr: index }, target, key, descriptor)
+    }
+}
+
 
 export interface ComponentAnnotationArgs {
     name: string

@@ -9,7 +9,9 @@ import {
     AutowireMethodAnnotationArgs, Annotations, Component, ComponentCreatedType, BeanComponentAnnotationArgs, ApplicationHandlerAnnotationArgs,
     ComponentHandlerAnnotationArgs, registerClass as _registerClass,
     ComponentInject,
-    ComponentInjectAnnotationArgs
+    ComponentInjectAnnotationArgs,
+    BeanInject,
+    BeanInjectAnnotationArgs
 } from './annotation/Annotations';
 import { ComponentOriginalType } from "./annotation/Annotations";
 import { ApplicationHandlerInterface } from "./interface/ApplicationHandler.interface";
@@ -208,6 +210,7 @@ export class ObjBox implements ObjBoxInterface {
         let prot = fun.prototype as ComponentInterface
         let componentAnnotation = prot._annotations_.clazz.getAnnotation<ComponentAnnotationArgs>(ComponentAnnotation.name);
         let temp: ScannedTemplate = {
+            originalClass: null,
             componentName: (componentAnnotation == null || componentAnnotation.annotationArgs.name == null) ? fun.name : componentAnnotation.annotationArgs.name, //如果没有用Component作为组件名称，则默认使用class名称
             priority: (componentAnnotation == null || componentAnnotation.annotationArgs.priority == null) ? 0 : Math.trunc(componentAnnotation.annotationArgs.priority),
             className: fun.name,
@@ -449,6 +452,7 @@ export class ObjBox implements ObjBoxInterface {
         if (beanAnnotation != null) {
             for (let methodAnnotationType of beanAnnotation) {
                 let temp: ScannedTemplate = {
+                    originalClass: beanComponent.constructor as Constructor,
                     componentName: methodAnnotationType.annotationArgs.name,
                     priority: methodAnnotationType.annotationArgs.priority,
                     className: DefaultFilepath.RegisterFromMethod,
@@ -512,8 +516,45 @@ export class ObjBox implements ObjBoxInterface {
                     result = new cons(...cons_args);
                     this.removesaveConstructorRef(sTemplate.componentName);
                 } else if (sTemplate.originalType == ComponentOriginalType.FromMethod || sTemplate.originalType == ComponentOriginalType.ByObject) {
-                    result = (sTemplate.newInstance as BeanMethod)();
+                    let methodArgs: any[] = [];
+                    let beanInjectAnnotation: BeanInjectAnnotationArgs = null;
+
+                    let prot = sTemplate.originalClass ? sTemplate.originalClass.prototype : null;
+                    if (prot != null && prot._annotations_ != null) {
+                        let mats = prot._annotations_.methods.getAnnotationsByName<BeanInjectAnnotationArgs>(BeanInject.name)
+                        if (mats != null) {
+                            for (let i = 0; i < mats.length; i++) {
+                                // bound makeObj1
+                                if (mats[i].methodName.replace("bound ", "") == sTemplate.newInstance.name.replace("bound ", "")) {
+                                    beanInjectAnnotation = mats[i].annotationArgs;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (beanInjectAnnotation != null && beanInjectAnnotation.arr.length > 0) {
+                        for (let i = 0; i < beanInjectAnnotation.arr.length; i++) {
+                            let argsInfo = beanInjectAnnotation.arr[i];
+                            if (argsInfo != null) {
+                                let ref = null;
+                                if (argsInfo.name != null) {
+                                    ref = this.getComponent(argsInfo.name);
+                                } else if (argsInfo.value != null) {
+                                    ref = argsInfo.value;
+                                } else if (argsInfo.ref != null && typeof (argsInfo.ref) == "function") {
+                                    ref = argsInfo.ref(this);
+                                }
+                                if (ref == null && argsInfo.require !== false) {
+                                    throw new Error(`Cannot find component "${argsInfo.name}" while injecting dependencies of "${sTemplate.componentName}" at "${sTemplate.newInstance.name}" by @BeanInject`)
+                                } else {
+                                    methodArgs.push(ref);
+                                }
+                            }
+                        }
+                    }
+                    result = (sTemplate.newInstance as BeanMethod)(...methodArgs);
                 }
+
                 if (sTemplate.instances == null) {
                     sTemplate.instances = [result]
                 } else {
@@ -1057,6 +1098,7 @@ export class ObjBox implements ObjBoxInterface {
         priority = Number(priority); priority = isNaN(priority) ? 0 : Math.trunc(priority);
 
         let temp: ScannedTemplate = {
+            originalClass: null,
             componentName: name,
             priority: priority,
             className: DefaultFilepath.RegisterFromMethod,
@@ -1080,6 +1122,7 @@ export class ObjBox implements ObjBoxInterface {
         priority = Number(priority); priority = isNaN(priority) ? 0 : Math.trunc(priority);
 
         let temp: ScannedTemplate = {
+            originalClass: obj.constructor as Constructor,
             componentName: name,
             priority: priority,
             className: obj.constructor.name,

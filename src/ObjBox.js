@@ -182,6 +182,7 @@ class ObjBox {
         let prot = fun.prototype;
         let componentAnnotation = prot._annotations_.clazz.getAnnotation(Annotations_1.Component.name);
         let temp = {
+            originalClass: null,
             componentName: (componentAnnotation == null || componentAnnotation.annotationArgs.name == null) ? fun.name : componentAnnotation.annotationArgs.name,
             priority: (componentAnnotation == null || componentAnnotation.annotationArgs.priority == null) ? 0 : Math.trunc(componentAnnotation.annotationArgs.priority),
             className: fun.name,
@@ -417,6 +418,7 @@ class ObjBox {
         if (beanAnnotation != null) {
             for (let methodAnnotationType of beanAnnotation) {
                 let temp = {
+                    originalClass: beanComponent.constructor,
                     componentName: methodAnnotationType.annotationArgs.name,
                     priority: methodAnnotationType.annotationArgs.priority,
                     className: DefaultFilepath.RegisterFromMethod,
@@ -482,7 +484,45 @@ class ObjBox {
                     this.removesaveConstructorRef(sTemplate.componentName);
                 }
                 else if (sTemplate.originalType == Annotations_2.ComponentOriginalType.FromMethod || sTemplate.originalType == Annotations_2.ComponentOriginalType.ByObject) {
-                    result = sTemplate.newInstance();
+                    let methodArgs = [];
+                    let beanInjectAnnotation = null;
+                    let prot = sTemplate.originalClass ? sTemplate.originalClass.prototype : null;
+                    if (prot != null && prot._annotations_ != null) {
+                        let mats = prot._annotations_.methods.getAnnotationsByName(Annotations_1.BeanInject.name);
+                        if (mats != null) {
+                            for (let i = 0; i < mats.length; i++) {
+                                // bound makeObj1
+                                if (mats[i].methodName.replace("bound ", "") == sTemplate.newInstance.name.replace("bound ", "")) {
+                                    beanInjectAnnotation = mats[i].annotationArgs;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (beanInjectAnnotation != null && beanInjectAnnotation.arr.length > 0) {
+                        for (let i = 0; i < beanInjectAnnotation.arr.length; i++) {
+                            let argsInfo = beanInjectAnnotation.arr[i];
+                            if (argsInfo != null) {
+                                let ref = null;
+                                if (argsInfo.name != null) {
+                                    ref = this.getComponent(argsInfo.name);
+                                }
+                                else if (argsInfo.value != null) {
+                                    ref = argsInfo.value;
+                                }
+                                else if (argsInfo.ref != null && typeof (argsInfo.ref) == "function") {
+                                    ref = argsInfo.ref(this);
+                                }
+                                if (ref == null && argsInfo.require !== false) {
+                                    throw new Error(`Cannot find component "${argsInfo.name}" while injecting dependencies of "${sTemplate.componentName}" at "${sTemplate.newInstance.name}" by @BeanInject`);
+                                }
+                                else {
+                                    methodArgs.push(ref);
+                                }
+                            }
+                        }
+                    }
+                    result = sTemplate.newInstance(...methodArgs);
                 }
                 if (sTemplate.instances == null) {
                     sTemplate.instances = [result];
@@ -1020,6 +1060,7 @@ class ObjBox {
         priority = Number(priority);
         priority = isNaN(priority) ? 0 : Math.trunc(priority);
         let temp = {
+            originalClass: null,
             componentName: name,
             priority: priority,
             className: DefaultFilepath.RegisterFromMethod,
@@ -1043,6 +1084,7 @@ class ObjBox {
         priority = Number(priority);
         priority = isNaN(priority) ? 0 : Math.trunc(priority);
         let temp = {
+            originalClass: obj.constructor,
             componentName: name,
             priority: priority,
             className: obj.constructor.name,

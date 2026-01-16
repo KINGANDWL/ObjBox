@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Annotation = exports.AutowireMethod = exports.AutowireProperty = exports.ComponentInject = exports.Component = exports.Bean = exports.BeanComponent = exports.ComponentHandler = exports.ApplicationHandler = exports.ComponentOriginalType = exports.ComponentCreatedType = exports.registerMethodArguments = exports.registerClass = exports.registerMethod = exports.registerProperty = exports.Annotations = exports.MethodArgumentsAnnotation = exports.PropertyAnnotation = exports.MethodAnnotation = exports.ClassAnnotation = exports.getFunName = void 0;
+exports.Annotation = exports.AutowireMethod = exports.AutowireProperty = exports.ComponentInject = exports.Component = exports.BeanInject = exports.Bean = exports.BeanComponent = exports.ComponentHandler = exports.ApplicationHandler = exports.ComponentOriginalType = exports.ComponentCreatedType = exports.registerMethodArguments = exports.registerClass = exports.registerMethod = exports.registerProperty = exports.Annotations = exports.MethodArgumentsAnnotation = exports.PropertyAnnotation = exports.MethodAnnotation = exports.ClassAnnotation = exports.getFunName = void 0;
 /**
  * 通过异常动态获取函数名
  * @param level 跳出层次，1为当前函数
@@ -262,6 +262,18 @@ function Bean(name, scope = ComponentCreatedType.Singleton, priority) {
     };
 }
 exports.Bean = Bean;
+/**
+ * Bean函数参数注入注解
+ * @param index 参数索引
+ * @returns
+ */
+function BeanInject(index) {
+    let _annotationName = getFunName(2);
+    return function (target, key, descriptor) {
+        registerMethod(_annotationName, { arr: index }, target, key, descriptor);
+    };
+}
+exports.BeanInject = BeanInject;
 /**
  * 标注class为组件，强烈推荐不要省略name，在ts编译优化情况下，类型名称会被擦除，会导致名称重复问题
  * @param name

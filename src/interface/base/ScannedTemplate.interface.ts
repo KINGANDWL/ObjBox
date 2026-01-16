@@ -9,7 +9,7 @@ export type Constructor = {
 };
 //普通函数类型
 export type BeanMethod = {
-    (),
+    (...args:any[]),
     prototype: ComponentInterface
 };
 
@@ -18,6 +18,7 @@ export type BeanMethod = {
  * 用于记录扫描文件与创建组件的信息，以及其他功能
  */
 export interface ScannedTemplate {
+    originalClass: Constructor //原始class
     isloaded?: boolean
     componentName: string //组件名称
     className: string //模板class名称
