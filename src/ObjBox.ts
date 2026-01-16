@@ -199,22 +199,22 @@ export class ObjBox implements ObjBoxInterface {
 
     /**
      * 通过函数创建扫描模板
-     * @param fun 
+     * @param clazz 
      * @param filePath 函数来源
      */
-    private static createScannedTemplateFromFunction(fun: Function, filePath: string): ScannedTemplate {
-        if (fun == null || filePath == null || filePath.trim().length <= 0) {
-            // if (fun == null) {
+    private static createScannedTemplateFromClazz(clazz: Function, filePath: string): ScannedTemplate {
+        if (clazz == null || filePath == null || filePath.trim().length <= 0) {
+            // if (clazz == null) {
             return null
         }
-        let prot = fun.prototype as ComponentInterface
+        let prot = clazz.prototype as ComponentInterface
         let componentAnnotation = prot._annotations_.clazz.getAnnotation<ComponentAnnotationArgs>(ComponentAnnotation.name);
         let temp: ScannedTemplate = {
-            originalClass: null,
-            componentName: (componentAnnotation == null || componentAnnotation.annotationArgs.name == null) ? fun.name : componentAnnotation.annotationArgs.name, //如果没有用Component作为组件名称，则默认使用class名称
+            originalClass: clazz as Constructor,
+            componentName: (componentAnnotation == null || componentAnnotation.annotationArgs.name == null) ? clazz.name : componentAnnotation.annotationArgs.name, //如果没有用Component作为组件名称，则默认使用class名称
             priority: (componentAnnotation == null || componentAnnotation.annotationArgs.priority == null) ? 0 : Math.trunc(componentAnnotation.annotationArgs.priority),
-            className: fun.name,
-            newInstance: fun as Constructor,
+            className: clazz.name,
+            newInstance: clazz as Constructor,
             filePath: filePath,
             instances: [],
             createdType: (componentAnnotation == null || componentAnnotation.annotationArgs.scope == null) ? ComponentCreatedType.Singleton : componentAnnotation.annotationArgs.scope,
@@ -431,13 +431,13 @@ export class ObjBox implements ObjBoxInterface {
 
     /**
      * 通过函数创建模板
-     * @param functions 
+     * @param clazz 
      */
-    private static createComponentTemplatesFromFunctions(functions: Function, filepath: string): ScannedTemplate {
+    private static createComponentTemplatesFromClazz(clazz: Function, filepath: string): ScannedTemplate {
         let sTemplate: ScannedTemplate = null
-        sTemplate = ObjBox.createScannedTemplateFromFunction(functions, filepath);
+        sTemplate = ObjBox.createScannedTemplateFromClazz(clazz, filepath);
         if (sTemplate == null) {
-            throw Error(`Cannot create template: class ${functions.name} in "${filepath}"`)
+            throw Error(`Cannot create template: class ${clazz.name} in "${filepath}"`)
         }
         return sTemplate
     }
@@ -978,7 +978,7 @@ export class ObjBox implements ObjBoxInterface {
         // 2、验证function的prototype规范性
         if (ObjBox.isFunctionTypeofTemplate(clazz)) {
             // 3、通过function创建组件扫描模板ScannedTemplate
-            let sTemplate = ObjBox.createComponentTemplatesFromFunctions(clazz, filepath);
+            let sTemplate = ObjBox.createComponentTemplatesFromClazz(clazz, filepath);
 
             // 4、校验模板是否为ApplicationHandler实例化并存储
             if (ObjBox.isTemplateTypeofApplicationHandler(sTemplate)) {

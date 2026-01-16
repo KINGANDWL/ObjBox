@@ -171,22 +171,22 @@ class ObjBox {
     }
     /**
      * 通过函数创建扫描模板
-     * @param fun
+     * @param clazz
      * @param filePath 函数来源
      */
-    static createScannedTemplateFromFunction(fun, filePath) {
-        if (fun == null || filePath == null || filePath.trim().length <= 0) {
-            // if (fun == null) {
+    static createScannedTemplateFromClazz(clazz, filePath) {
+        if (clazz == null || filePath == null || filePath.trim().length <= 0) {
+            // if (clazz == null) {
             return null;
         }
-        let prot = fun.prototype;
+        let prot = clazz.prototype;
         let componentAnnotation = prot._annotations_.clazz.getAnnotation(Annotations_1.Component.name);
         let temp = {
-            originalClass: null,
-            componentName: (componentAnnotation == null || componentAnnotation.annotationArgs.name == null) ? fun.name : componentAnnotation.annotationArgs.name,
+            originalClass: clazz,
+            componentName: (componentAnnotation == null || componentAnnotation.annotationArgs.name == null) ? clazz.name : componentAnnotation.annotationArgs.name,
             priority: (componentAnnotation == null || componentAnnotation.annotationArgs.priority == null) ? 0 : Math.trunc(componentAnnotation.annotationArgs.priority),
-            className: fun.name,
-            newInstance: fun,
+            className: clazz.name,
+            newInstance: clazz,
             filePath: filePath,
             instances: [],
             createdType: (componentAnnotation == null || componentAnnotation.annotationArgs.scope == null) ? Annotations_1.ComponentCreatedType.Singleton : componentAnnotation.annotationArgs.scope,
@@ -398,13 +398,13 @@ class ObjBox {
     }
     /**
      * 通过函数创建模板
-     * @param functions
+     * @param clazz
      */
-    static createComponentTemplatesFromFunctions(functions, filepath) {
+    static createComponentTemplatesFromClazz(clazz, filepath) {
         let sTemplate = null;
-        sTemplate = ObjBox.createScannedTemplateFromFunction(functions, filepath);
+        sTemplate = ObjBox.createScannedTemplateFromClazz(clazz, filepath);
         if (sTemplate == null) {
-            throw Error(`Cannot create template: class ${functions.name} in "${filepath}"`);
+            throw Error(`Cannot create template: class ${clazz.name} in "${filepath}"`);
         }
         return sTemplate;
     }
@@ -937,7 +937,7 @@ class ObjBox {
         // 2、验证function的prototype规范性
         if (ObjBox.isFunctionTypeofTemplate(clazz)) {
             // 3、通过function创建组件扫描模板ScannedTemplate
-            let sTemplate = ObjBox.createComponentTemplatesFromFunctions(clazz, filepath);
+            let sTemplate = ObjBox.createComponentTemplatesFromClazz(clazz, filepath);
             // 4、校验模板是否为ApplicationHandler实例化并存储
             if (ObjBox.isTemplateTypeofApplicationHandler(sTemplate)) {
                 // 保险起见，ApplicationHandler只能通过class进行注册
