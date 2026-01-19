@@ -14,33 +14,43 @@ export interface ComponentHandlerInterface {
      */
     scanned: (objbox: ObjBoxInterface, template: ScannedTemplate) => void
     /**
-     * 模板被创建为组件，但是并未触发template的create
+     * 组件即将创建（还未开始）
      * @return
     */
     beforeCreated?: (objbox: ObjBoxInterface, template: ScannedTemplate) => void
     /**
-     * 模板被创建为组件，且已经触发template的create
+     * 组件创建完成（但未注入）
      * @return
      */
     afterCreated?: (objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface | any) => void
     /**
-     * 模板创建创建组件完成，但并未触发template的completed
+     * 组件注入前
      * @return
      */
     beforeCompleted?: (objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface | any) => void
     /**
-     * 模板创建创建组件完成，且触发template的completed
+     * 组件完成注入
      * @return
      */
     afterCompleted?: (objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface | any) => void
     /**
-     * 模板创建创建组件完成，但在template的ready之前
+     * 容器就绪前
      * @return
      */
     beforeReady?: (objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface | any) => void
     /**
-     * 模板创建创建组件完成，且template的ready刚好执行完成
+     * 容器已就绪
      * @return
      */
     afterReady?: (objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface | any) => void
+    /**
+     * 容器被卸载之前
+     * @return
+     */
+    beforeUnload?: (objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface | any) => void
+    /**
+     * 容器被卸载之前
+     * @return
+     */
+    afterUnload?: (objbox: ObjBoxInterface, template: ScannedTemplate, component: ComponentInterface | any) => void
 }

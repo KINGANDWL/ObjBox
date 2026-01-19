@@ -5,12 +5,12 @@ import { ComponentInterface } from './Component.interface';
 export type Constructor = {
     // new(),
     new(...args:any[]);
-    prototype: ComponentInterface
+    prototype: ComponentInterface & {}
 };
 //普通函数类型
 export type BeanMethod = {
     (...args:any[]),
-    prototype: ComponentInterface
+    prototype: ComponentInterface & {}
 };
 
 /**

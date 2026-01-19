@@ -38,7 +38,7 @@ const DefaultFilepath = {
 
 export class ObjBox implements ObjBoxInterface {
     private config = {
-        version: [1, 0, 0],
+        version: [1, 7, 12],
         objBoxLogger: DefaultManagerConfig
     }
     private logger: Logger
@@ -629,6 +629,22 @@ export class ObjBox implements ObjBoxInterface {
             }
         }
     }
+    private executeComponentHandler_beforeUnload(sTemplate: ScannedTemplate, component: ComponentInterface) {
+        let allCH = this.getAllComponentHandler();
+        for (let ch of allCH) {
+            if (ch.beforeUnload != null) {
+                ch.beforeUnload(this, sTemplate, component);
+            }
+        }
+    }
+    private executeComponentHandler_afterUnload(sTemplate: ScannedTemplate, component: ComponentInterface) {
+        let allCH = this.getAllComponentHandler();
+        for (let ch of allCH) {
+            if (ch.afterUnload != null) {
+                ch.afterUnload(this, sTemplate, component);
+            }
+        }
+    }
 
     private executeTemplateHandler_created(component: ComponentInterface) {
         let _component = component as unknown as TemplateHandler;
@@ -659,6 +675,33 @@ export class ObjBox implements ObjBoxInterface {
                 this.logger.error((err as Error).stack)
             }
         }
+    }
+    private async executeTemplateHandler_unloadAsync(components: ComponentInterface[]): Promise<void> {
+        let promises: Promise<void>[] = [];
+        components.forEach(async (component) => {
+            let _component = component as unknown as TemplateHandler;
+            if (_component.unload != null) {
+                try {
+                    promises.push(_component.unload());
+                } catch (err) {
+                    this.logger.error((err as Error).stack)
+                }
+            }
+        });
+        await Promise.all(promises);
+        return;
+    }
+    private executeTemplateHandler_unload(components: ComponentInterface[]): void {
+        components.forEach(async (component) => {
+            let _component = component as unknown as TemplateHandler;
+            if (_component.unload != null) {
+                try {
+                    _component.unload();
+                } catch (err) {
+                    this.logger.error((err as Error).stack)
+                }
+            }
+        })
     }
 
     private executeApplicationHandler_start() {
@@ -708,6 +751,22 @@ export class ObjBox implements ObjBoxInterface {
         for (let ah of allAH) {
             if (ah.afterRunning != null) {
                 ah.afterRunning(this);
+            }
+        }
+    }
+    private executeApplicationHandler_beforeUnload() {
+        let allAH = this.getAllApplicationHandler();
+        for (let ah of allAH) {
+            if (ah.beforeUnload != null) {
+                ah.beforeUnload(this);
+            }
+        }
+    }
+    private executeApplicationHandler_afterUnload() {
+        let allAH = this.getAllApplicationHandler();
+        for (let ah of allAH) {
+            if (ah.afterUnload != null) {
+                ah.afterUnload(this);
             }
         }
     }
@@ -1227,6 +1286,55 @@ export class ObjBox implements ObjBoxInterface {
             this.executeApplicationHandler_afterRunning()
         }
     }
+
+    /**
+     * 解除所有引用
+     */
+    private release() {
+        this.applicationHandlerScannedTemplates = {};
+        this.componentHandlerScannedTemplates = {};
+        this.componentScannedTemplates = {};
+        this.componentScannedTemplates_Function = new Map();
+        this.beanComponentTemplates = {};
+        this.componentTempPool = {};
+        this.constructorInstanceIsCreating = new Set();
+        this.componentTempPool_Function = new Map();
+        this.status = {
+            running: false
+        }
+    }
+
+    async unload(wait?: boolean): Promise<void> {
+        // 16.1、触发 @ApplicationHandler 的 beforeUnload(objbox)
+        this.executeApplicationHandler_beforeUnload();
+
+        let allComponents = this._getAllComponentsInstance();
+        for (let component of allComponents) {
+            // 16.2、触发 @ComponentHandler 的 beforeUnloaded(objbox,sTemplate,component)
+            this.executeComponentHandler_beforeUnload(component._annotations_.scannedTemplate, component);
+
+            // 16.3、触发 @TemplateHandler 的 unloaded
+            let _component = component as unknown as TemplateHandler;
+            if (_component.unload != null) {
+                try {
+                    if (wait !== false) {
+                        await _component.unload();
+                    } else {
+                        _component.unload();
+                    }
+                } catch (err) {
+                    this.logger.error((err as Error).stack);
+                }
+            }
+
+            // 16.4、触发 @ComponentHandler 的 afterUnloaded(objbox,sTemplate,component)
+            this.executeComponentHandler_afterUnload(component._annotations_.scannedTemplate, component);
+        }
+
+        // 16.5、触发 @ApplicationHandler 的 afterUnload(objbox)
+        this.executeApplicationHandler_afterUnload();
+        this.release();
+    }
     /**
      * 打印logo
      */
@@ -1324,6 +1432,15 @@ export class ObjBox implements ObjBoxInterface {
         15.3、触发 @TemplateHandler 的 ready
         15.4、触发 @ComponentHandler 的 afterReady(objbox,sTemplate,component)
         15.5、触发 @ApplicationHandler 的 afterRunning(objbox)
+================== 卸载阶段 ==================
+说明：手动触发unload卸载程序，解除程序所有的模板与实例化的全部引用，将程序清空
+    16、unload卸载程序
+        16.1、触发 @ApplicationHandler 的 beforeUnload(objbox)
+        16.2、触发 @ComponentHandler 的 beforeUnloaded(objbox,sTemplate,component)
+        16.3、触发 @TemplateHandler 的 unloaded
+        16.4、触发 @ComponentHandler 的 afterUnloaded(objbox,sTemplate,component)
+        16.5、触发 @ApplicationHandler 的 afterUnload(objbox)
+
 */
 
 

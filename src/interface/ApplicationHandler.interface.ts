@@ -18,6 +18,7 @@ export interface ApplicationHandlerInterface {
      */
     preprocessScannedTemplate?:(objBox: ObjBoxInterface, templates: ScannedTemplate[]) => void
     
+    
     /**
      * 组件创建就绪前应用处理
      * @param objBox 
@@ -39,4 +40,15 @@ export interface ApplicationHandlerInterface {
      * @param objBox 
      */
     afterRunning?: (objBox: ObjBoxInterface) => void
+    
+
+    /**
+     * 应用卸载前
+     */
+    beforeUnload?: (objBox: ObjBoxInterface) => void
+    /**
+     * 应用卸载后
+     * @param objBox 
+     */
+    afterUnload?: (objBox: ObjBoxInterface) => void
 }

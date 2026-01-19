@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ObjBox = void 0;
 const LoggerManagerConfig_1 = require("../libs/logger/LoggerManagerConfig");
@@ -22,7 +31,7 @@ class ObjBox {
     // private static fs_extra: any = null
     constructor(loggerConfig) {
         this.config = {
-            version: [1, 0, 0],
+            version: [1, 7, 12],
             objBoxLogger: LoggerManagerConfig_1.DefaultManagerConfig
         };
         /**
@@ -596,6 +605,22 @@ class ObjBox {
             }
         }
     }
+    executeComponentHandler_beforeUnload(sTemplate, component) {
+        let allCH = this.getAllComponentHandler();
+        for (let ch of allCH) {
+            if (ch.beforeUnload != null) {
+                ch.beforeUnload(this, sTemplate, component);
+            }
+        }
+    }
+    executeComponentHandler_afterUnload(sTemplate, component) {
+        let allCH = this.getAllComponentHandler();
+        for (let ch of allCH) {
+            if (ch.afterUnload != null) {
+                ch.afterUnload(this, sTemplate, component);
+            }
+        }
+    }
     executeTemplateHandler_created(component) {
         let _component = component;
         if (_component.created != null) {
@@ -628,6 +653,37 @@ class ObjBox {
                 this.logger.error(err.stack);
             }
         }
+    }
+    executeTemplateHandler_unloadAsync(components) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let promises = [];
+            components.forEach((component) => __awaiter(this, void 0, void 0, function* () {
+                let _component = component;
+                if (_component.unload != null) {
+                    try {
+                        promises.push(_component.unload());
+                    }
+                    catch (err) {
+                        this.logger.error(err.stack);
+                    }
+                }
+            }));
+            yield Promise.all(promises);
+            return;
+        });
+    }
+    executeTemplateHandler_unload(components) {
+        components.forEach((component) => __awaiter(this, void 0, void 0, function* () {
+            let _component = component;
+            if (_component.unload != null) {
+                try {
+                    _component.unload();
+                }
+                catch (err) {
+                    this.logger.error(err.stack);
+                }
+            }
+        }));
     }
     executeApplicationHandler_start() {
         let allAH = this.getAllApplicationHandler();
@@ -674,6 +730,22 @@ class ObjBox {
         for (let ah of allAH) {
             if (ah.afterRunning != null) {
                 ah.afterRunning(this);
+            }
+        }
+    }
+    executeApplicationHandler_beforeUnload() {
+        let allAH = this.getAllApplicationHandler();
+        for (let ah of allAH) {
+            if (ah.beforeUnload != null) {
+                ah.beforeUnload(this);
+            }
+        }
+    }
+    executeApplicationHandler_afterUnload() {
+        let allAH = this.getAllApplicationHandler();
+        for (let ah of allAH) {
+            if (ah.afterUnload != null) {
+                ah.afterUnload(this);
             }
         }
     }
@@ -1176,6 +1248,53 @@ class ObjBox {
         }
     }
     /**
+     * 解除所有引用
+     */
+    release() {
+        this.applicationHandlerScannedTemplates = {};
+        this.componentHandlerScannedTemplates = {};
+        this.componentScannedTemplates = {};
+        this.componentScannedTemplates_Function = new Map();
+        this.beanComponentTemplates = {};
+        this.componentTempPool = {};
+        this.constructorInstanceIsCreating = new Set();
+        this.componentTempPool_Function = new Map();
+        this.status = {
+            running: false
+        };
+    }
+    unload(wait) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // 16.1、触发 @ApplicationHandler 的 beforeUnload(objbox)
+            this.executeApplicationHandler_beforeUnload();
+            let allComponents = this._getAllComponentsInstance();
+            for (let component of allComponents) {
+                // 16.2、触发 @ComponentHandler 的 beforeUnloaded(objbox,sTemplate,component)
+                this.executeComponentHandler_beforeUnload(component._annotations_.scannedTemplate, component);
+                // 16.3、触发 @TemplateHandler 的 unloaded
+                let _component = component;
+                if (_component.unload != null) {
+                    try {
+                        if (wait !== false) {
+                            yield _component.unload();
+                        }
+                        else {
+                            _component.unload();
+                        }
+                    }
+                    catch (err) {
+                        this.logger.error(err.stack);
+                    }
+                }
+                // 16.4、触发 @ComponentHandler 的 afterUnloaded(objbox,sTemplate,component)
+                this.executeComponentHandler_afterUnload(component._annotations_.scannedTemplate, component);
+            }
+            // 16.5、触发 @ApplicationHandler 的 afterUnload(objbox)
+            this.executeApplicationHandler_afterUnload();
+            this.release();
+        });
+    }
+    /**
      * 打印logo
      */
     printLogo() {
@@ -1271,6 +1390,15 @@ exports.ObjBox = ObjBox;
         15.3、触发 @TemplateHandler 的 ready
         15.4、触发 @ComponentHandler 的 afterReady(objbox,sTemplate,component)
         15.5、触发 @ApplicationHandler 的 afterRunning(objbox)
+================== 卸载阶段 ==================
+说明：手动触发unload卸载程序，解除程序所有的模板与实例化的全部引用，将程序清空
+    16、unload卸载程序
+        16.1、触发 @ApplicationHandler 的 beforeUnload(objbox)
+        16.2、触发 @ComponentHandler 的 beforeUnloaded(objbox,sTemplate,component)
+        16.3、触发 @TemplateHandler 的 unloaded
+        16.4、触发 @ComponentHandler 的 afterUnloaded(objbox,sTemplate,component)
+        16.5、触发 @ApplicationHandler 的 afterUnload(objbox)
+
 */
 /**
  * 使用样例

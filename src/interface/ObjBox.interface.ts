@@ -59,6 +59,12 @@ export interface ObjBoxInterface {
      */
     run: () => void
     /**
+     * 卸载所有组件并停止容器
+     * @param wait 是否等待异步执行完毕（默认true）
+     * @returns 
+     */
+    unload: (wait?: boolean) => Promise<void>
+    /**
      * 从class注册模板
      * @param scannedDirs 
      */

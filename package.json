@@ -1,6 +1,6 @@
 {
 	"name": "objbox",
-	"version": "1.7.11",
+	"version": "1.7.12",
 	"description": "基于typescript装饰器的轻量级IOC容器",
 	"repository": {
 		"url": "https://github.com/KINGANDWL/ObjBox"
