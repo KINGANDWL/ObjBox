@@ -181,6 +181,14 @@ main()
         15.3、触发 @TemplateHandler 的 ready
         15.4、触发 @ComponentHandler 的 afterReady(objbox,sTemplate,component)
         15.5、触发 @ApplicationHandler 的 afterRunning(objbox)
+================== 卸载阶段 ==================
+说明：手动触发unload卸载程序，解除程序所有的模板与实例化的全部引用，将程序清空
+    16、unload卸载程序
+        16.1、触发 @ApplicationHandler 的 beforeUnload(objbox)
+        16.2、触发 @ComponentHandler 的 beforeUnloaded(objbox,sTemplate,component)
+        16.3、触发 @TemplateHandler 的 unloaded
+        16.4、触发 @ComponentHandler 的 afterUnloaded(objbox,sTemplate,component)
+        16.5、触发 @ApplicationHandler 的 afterUnload(objbox)
 */
 ```
 

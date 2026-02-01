@@ -1315,7 +1315,8 @@ export class ObjBox implements ObjBoxInterface {
 
             // 16.3、触发 @TemplateHandler 的 unloaded
             let _component = component as unknown as TemplateHandler;
-            if (_component.unload != null) {
+            // @ts-ignore
+            if (_component.unload != null && _component != this) {
                 try {
                     if (wait !== false) {
                         await _component.unload();

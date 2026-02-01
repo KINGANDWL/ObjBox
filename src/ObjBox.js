@@ -1273,7 +1273,8 @@ class ObjBox {
                 this.executeComponentHandler_beforeUnload(component._annotations_.scannedTemplate, component);
                 // 16.3、触发 @TemplateHandler 的 unloaded
                 let _component = component;
-                if (_component.unload != null) {
+                // @ts-ignore
+                if (_component.unload != null && _component != this) {
                     try {
                         if (wait !== false) {
                             yield _component.unload();
