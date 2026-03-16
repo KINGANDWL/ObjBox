@@ -92,7 +92,7 @@ class ObjBoxHelper {
     static doesTemplateHaveClassAnnotation(annotationName, template) {
         if (template != null && annotationName != null) {
             if (template.originalType != null) {
-                if (template.newInstance.prototype._annotations_ != null) {
+                if (template.newInstance.prototype != null && template.newInstance.prototype._annotations_ != null) {
                     return template.newInstance.prototype._annotations_.clazz.getAnnotation(annotationName) != null;
                 }
             }
