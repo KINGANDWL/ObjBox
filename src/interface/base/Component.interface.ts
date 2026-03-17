@@ -8,4 +8,6 @@ export interface ComponentInterface {
     _annotations_: Annotations
     //自己被依赖注入的上一层组件，用于找parent节点
     _preComponents_: ComponentInterface[]
+    // 标记是否进入过创建流程
+    __objbox_hadBeenMade?: boolean
 }

@@ -905,23 +905,24 @@ export class ObjBox implements ObjBoxInterface {
          * 13、对所有模板创建第一个实例组件并进行依赖注入
          */
 
-        let component = null
+        let component: ComponentInterface = null
         let scannedTemplate = this.getComponentTemplate(target)
         if (scannedTemplate != null) {
 
             //   13.1 从模板单例实例化处获取实例，如果没有去缓存取
             component = this.getSingletonInstanceFromTemplate(scannedTemplate)
-            if (component == null) {
+            if (component == null || (component.__objbox_hadBeenMade !== true)) {
 
                 // 13.2 从缓存获取；如果缓存没有，新建
-                component = this.getComponentFromTempPool(target);
-                if (component == null) {
+                component == null && (component = this.getComponentFromTempPool(target));
+                if (component == null || (component.__objbox_hadBeenMade !== true)) {
                     // 13.3、触发 @ComponentHandler 的 beforeCreated(objbox,sTemplate)
                     this.executeComponentHandler_beforeCreated(scannedTemplate);
                     // 13.4、新建 @Component 组件 ObjBox.createComponentFromTemplate(sTemplate)
-                    component = this.createComponentFromTemplate(scannedTemplate);
-                    if (component != null) {
+                    component == null && (component = this.createComponentFromTemplate(scannedTemplate));
+                    if (component != null && (component.__objbox_hadBeenMade !== true)) {
                         this.saveComponentToLevelTwo(scannedTemplate.componentName, scannedTemplate.newInstance, component); //实例存入缓存
+                        component.__objbox_hadBeenMade = true;
 
                         // 13.5、触发 @TemplateHandler 的 created
                         this.executeTemplateHandler_created(component);
@@ -1229,7 +1230,14 @@ export class ObjBox implements ObjBoxInterface {
         let allBeanTempaltes: ScannedTemplate[] = []
         let allBeanComponent = this.getAllBeanComponent().filter((each) => {
             let isLoaded = each._annotations_.scannedTemplate.isloaded === true;
-            if (!isLoaded) { each._annotations_.scannedTemplate.isloaded = true; }
+            if (!isLoaded) {
+                each._annotations_.scannedTemplate.isloaded = true;
+                let ca = each._annotations_.clazz.getAnnotation<ComponentAnnotationArgs>(ComponentAnnotation.name)
+                if (ca != null) {
+                    // 修复@BeanComponent不可以为组件的bug
+                    each._annotations_.scannedTemplate.isloaded = false;
+                }
+            }
             return !isLoaded;
         });
         for (let bc of allBeanComponent) {

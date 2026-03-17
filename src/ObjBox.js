@@ -885,16 +885,17 @@ class ObjBox {
         if (scannedTemplate != null) {
             //   13.1 从模板单例实例化处获取实例，如果没有去缓存取
             component = this.getSingletonInstanceFromTemplate(scannedTemplate);
-            if (component == null) {
+            if (component == null || (component.__objbox_hadBeenMade !== true)) {
                 // 13.2 从缓存获取；如果缓存没有，新建
-                component = this.getComponentFromTempPool(target);
-                if (component == null) {
+                component == null && (component = this.getComponentFromTempPool(target));
+                if (component == null || (component.__objbox_hadBeenMade !== true)) {
                     // 13.3、触发 @ComponentHandler 的 beforeCreated(objbox,sTemplate)
                     this.executeComponentHandler_beforeCreated(scannedTemplate);
                     // 13.4、新建 @Component 组件 ObjBox.createComponentFromTemplate(sTemplate)
-                    component = this.createComponentFromTemplate(scannedTemplate);
-                    if (component != null) {
+                    component == null && (component = this.createComponentFromTemplate(scannedTemplate));
+                    if (component != null && (component.__objbox_hadBeenMade !== true)) {
                         this.saveComponentToLevelTwo(scannedTemplate.componentName, scannedTemplate.newInstance, component); //实例存入缓存
+                        component.__objbox_hadBeenMade = true;
                         // 13.5、触发 @TemplateHandler 的 created
                         this.executeTemplateHandler_created(component);
                         // 13.6、触发 @ComponentHandler 的 afterCreated(objbox,sTemplate,component)
@@ -1198,6 +1199,11 @@ class ObjBox {
             let isLoaded = each._annotations_.scannedTemplate.isloaded === true;
             if (!isLoaded) {
                 each._annotations_.scannedTemplate.isloaded = true;
+                let ca = each._annotations_.clazz.getAnnotation(Annotations_1.Component.name);
+                if (ca != null) {
+                    // 修复@BeanComponent不可以为组件的bug
+                    each._annotations_.scannedTemplate.isloaded = false;
+                }
             }
             return !isLoaded;
         });
